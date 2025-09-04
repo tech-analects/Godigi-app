@@ -5,7 +5,7 @@ import { AntDesign, Entypo, FontAwesome } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Image, RefreshControl, TouchableOpacity } from "react-native";
+import { ActivityIndicator, FlatList, Image, Platform, RefreshControl, TextInput, TouchableOpacity } from "react-native";
 import { StyleSheet, Text, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
@@ -302,6 +302,10 @@ function Jobs() {
      return null;
    };
 
+    const goToSearch = () => {
+    router.push("/search");
+  };
+
    const fetchData = () => {
      console.log("readched end here!", loadingMoreData, limit);
      if (loadingMoreData || !hasMore) return;
@@ -334,6 +338,26 @@ function Jobs() {
           }}
         />
       </View> */}
+
+       <View style={styles.topPart1}>
+                  <TouchableOpacity style={styles.searchBg} onPress={goToSearch}>
+                    <TextInput
+                      placeholder="Search Job"
+                      placeholderTextColor={"grey"}
+                      autoComplete="off"
+                      editable={false}
+                      style={[
+                        Colors.inputbox,
+                        {
+                          backgroundColor: "#fff",
+                          borderWidth: 1,
+                          borderColor: "#EDF1F3",
+                        },
+                      ]}
+                    />
+                  </TouchableOpacity>
+              </View>
+      
 
         {
           loadingData 
@@ -478,6 +502,11 @@ const styles = StyleSheet.create({
     // marginBottom: 50,
     
   },
+
+   topPart1: {
+     padding: 10,
+   },
+
   topPart: {
     flexDirection: "row",
     justifyContent: "center",

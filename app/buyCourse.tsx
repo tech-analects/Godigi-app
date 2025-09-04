@@ -9,11 +9,12 @@ import {
   MaterialCommunityIcons,
   MaterialIcons,
 } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { BlurView } from "expo-blur";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   FlatList,
   Image,
   ImageBackground,
@@ -31,6 +32,9 @@ import { Colors } from "@/constants/Colors";
 import Icon from "react-native-vector-icons/FontAwesome5";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeInDown } from "react-native-reanimated";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import apiInstance from "./interceptors";
+import AutoHeightWebView from "react-native-autoheight-webview";
 
 function BuyCourses() {
   const navigation = useNavigation();
@@ -38,6 +42,10 @@ function BuyCourses() {
   const goBack = () => {
     navigation.goBack();
   };
+
+  const route = useRoute();
+  console.log(route?.params?.id)
+  const courseId = route?.params?.id
 
   const type = ["Online","Projects", "Practicals"];
 
@@ -63,6 +71,43 @@ function BuyCourses() {
       name: "Interview Questions",
     },
   ];
+
+  const [loading,setLoading] = useState(false)
+  const [courseDetails,setCourseDetails] = useState([]);
+  const [courseNotes,setCourseNotes] = useState([]);
+
+  useEffect(()=>{
+    getCourseDetails();
+    addCourseView();
+  },[])
+
+  const getCourseDetails=async()=>{
+    try {
+      setLoading(true)
+       let formData = new FormData();
+       const token = await AsyncStorage.getItem("logged_in_user_token");
+       formData.append("token", token);
+
+       console.log(formData);
+       const response = await apiInstance.post(
+         `course/details/${courseId}`,
+         formData,
+         {
+           headers: { "Content-Type": "multipart/form-data" },
+         }
+       );
+       if(response.data.status){
+         console.log(response.data.data.course_details[0])
+        setCourseDetails(response.data.data.course_details[0])
+        setCourseNotes(response.data.data.course_notes)
+       }
+    } catch (error) {
+      console.log(error)
+    }
+    finally{
+      setLoading(false)
+    }
+  }
 
   const renderJobItem = ({ item }) => (
     <TouchableOpacity
@@ -208,79 +253,107 @@ function BuyCourses() {
     },
   ];
 
-  const renderItemInterviewQuestions = ({ item }) => (
-      <TouchableOpacity style={styles.card}>
-        <View style={[styles.iconContainer, { backgroundColor: item.color }]}>
-          <Icon name={item.icon} size={28} color="#fff" />
-        </View>
-        <View style={styles.textContainer}>
-          <Text style={styles.title}>{item.title}</Text>
-          <Text style={styles.count}>{item.questions} Questions</Text>
-        </View>
-        <Icon name="chevron-right" size={18} color="#ccc" />
-      </TouchableOpacity>
-    );
 
 
   
-   const renderNote = ({ item }) => (
-     <View style={styles.noteCard}>
-       <TouchableOpacity
-         style={styles.noteInfo}
-       >
-         <MaterialCommunityIcons name={item.icon} size={40} color={item.color} />
-         <Text style={styles.noteTitle}>{item.title}</Text>
-       </TouchableOpacity>
-  
-       <View style={styles.actions}>
-         <TouchableOpacity>
+   const renderNote = ({ item }) => {
+     let newUrl = `https://godigiinfotech.com/${item.url}`;
+     return (
+       <TouchableOpacity style={styles.noteCard}  onPress={() =>
+             navigation.navigate("PDFViewerScreen", {
+               subjectId: item.id,
+             })
+           }>
+          <View
+           style={styles.noteInfo}
+          
+         >
+           {/* Show image instead of MaterialCommunityIcons */}
+           <Image
+             source={{ uri: newUrl }}
+             style={{ height: 40, width: 50, objectFit: "contain" }}
+           />
+           {/* <SvgUri width="40" height="40" uri={newUrl} /> */}
+           {/* <SvgUri
+             uri="https://godigiinfotech.com/assets/images/subject_icons/3fbf008c016fc2ed8e85ce7199675c68.svg"
+             width={50}
+             height={40}
+           /> */}
+           <Text style={styles.noteTitle}>{item.subject_name}</Text>
+         </View>
+   
+         {/* Actions with icons only (no functionality) */}
+         {/* <View style={styles.actions}>
            <Feather name="download" size={24} color="#4CAF50" />
-         </TouchableOpacity>
-         <TouchableOpacity>
            <Feather name="share-2" size={24} color="#2196F3" />
-         </TouchableOpacity>
-       </View>
-     </View>
-   );
-  
+         </View> */}
+       </TouchableOpacity>
+     );
+   
+    };
 
-   const interviewQuestions = [
-     {
-       id: "1",
-       title: "HTML & CSS",
-       icon: "html5",
-       questions: 25,
-       color: "#E44D26",
-     },
-     {
-       id: "2",
-       title: "JavaScript",
-       icon: "js",
-       questions: 40,
-       color: "#F7DF1E",
-     },
-     {
-       id: "3",
-       title: "React.js",
-       icon: "react",
-       questions: 35,
-       color: "#61DAFB",
-     },
-     {
-       id: "4",
-       title: "Node.js",
-       icon: "node-js",
-       questions: 20,
-       color: "#68A063",
-     },
-     {
-       id: "5",
-       title: "DevOps",
-       icon: "server",
-       questions: 18,
-       color: "#6C63FF",
-     },
-   ];
+
+     const goToInterviewQuestionsDetails = (id) => {
+    router.push({
+      pathname: "/interviewQuestionsDetails",
+      params: { id: id }, // pass the param here
+    });
+  };
+
+   const renderItemInterviewQuestions = ({ item }) => {
+     let newUrl = `https://godigiinfotech.com/${item.url}`;
+     return (
+       <TouchableOpacity style={styles.noteCard} onPress={() =>
+           goToInterviewQuestionsDetails(item.id)
+           }>
+         <View
+           style={styles.noteInfo}
+           
+         >
+           {/* Show image instead of MaterialCommunityIcons */}
+           <Image
+             source={{ uri: newUrl }}
+             style={{ height: 40, width: 50, objectFit: "contain" }}
+           />
+           {/* <SvgUri width="40" height="40" uri={newUrl} /> */}
+           {/* <SvgUri
+             uri="https://godigiinfotech.com/assets/images/subject_icons/3fbf008c016fc2ed8e85ce7199675c68.svg"
+             width={50}
+             height={40}
+           /> */}
+           <Text style={styles.noteTitle}>{item.subject_name}</Text>
+         </View>
+   
+         {/* Actions with icons only (no functionality) */}
+         {/* <View style={styles.actions}>
+           <Feather name="download" size={24} color="#4CAF50" />
+           <Feather name="share-2" size={24} color="#2196F3" />
+         </View> */}
+       </TouchableOpacity>
+     );
+   };
+
+   const addCourseView = async () => {
+          try {
+            let formData = new FormData();
+            const token = await AsyncStorage.getItem("logged_in_user_token");
+            formData.append("token", token);
+     
+            console.log(formData);
+            const response = await apiInstance.post(
+              `update-counts/3/${courseId}`,
+              formData,
+              {
+                headers: { "Content-Type": "multipart/form-data" },
+              }
+            );
+     
+            console.log("response of view api data", response.data);
+          } catch (error) {
+            console.log("this is err ", error);
+          }
+        };
+  
 
 
    const [scrolledHeight, setScrolledHeight] = useState(0);
@@ -289,6 +362,26 @@ function BuyCourses() {
     setScrolledHeight(scrollY)
    }
 
+
+   const htmlContentDesc = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+        <style>
+          body {
+            font-family: -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-size: 14px;
+            color: #333;
+            padding: 0;
+          }
+        </style>
+      </head>
+      <body>${courseDetails?.app_description || "Description not provided"}</body>
+    </html>
+  `;
+
   return (
     <>
       {scrolledHeight < 25 ? (
@@ -296,6 +389,11 @@ function BuyCourses() {
       ) : (
         <StatusBar hidden={true} translucent backgroundColor="transparent" />
       )}
+      {
+        loading
+        ?
+        <ActivityIndicator style={{marginTop:50}}/>
+        :
       <View style={{ flex: 1 }}>
         <Animated.ScrollView
           onScroll={(e) => handleScroll(e)}
@@ -307,7 +405,7 @@ function BuyCourses() {
           <ImageBackground
             resizeMode="cover"
             source={{
-              uri: "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80",
+              uri: `https://godigiinfotech.com/${courseDetails?.url}`,
             }}
             style={styles.upperPart}
           >
@@ -323,7 +421,7 @@ function BuyCourses() {
                 </View>
                 <View style={styles.rightside}>
                   <FontAwesome name="bookmark" size={24} color="#fff" />
-                  <Entypo name="share" size={24} color="#fff" />
+                  {/* <Entypo name="share" size={24} color="#fff" /> */}
                 </View>
               </View>
               <View style={styles.topBased}>
@@ -334,7 +432,7 @@ function BuyCourses() {
                   />
                 </View>
                 <View>
-                  <Text style={styles.roleText}>React Native Bootcamp</Text>
+                  <Text style={styles.roleText}>{courseDetails?.title}</Text>
                   <View style={styles.compBased}>
                     <Text style={styles.compText}>Mobile Development</Text>
                   </View>
@@ -358,11 +456,11 @@ function BuyCourses() {
               </View> */}
                 <View style={styles.dataRow}>
                   <MaterialIcons name="language" size={24} color="white" />
-                  <Text style={styles.dataText}>English</Text>
+                  <Text style={styles.dataText}>{courseDetails?.language || "English"}</Text>
                 </View>
                 <View style={styles.dataRow}>
                   <Text style={styles.btmrpText}>MRP</Text>
-                  <Text style={[styles.btmrpTextPrice]}>{8999}</Text>
+                  <Text style={[styles.btmrpTextPrice]}>{courseDetails?.mrp || "na"}</Text>
                   <View style={styles.lineThrough}></View>
                 </View>
                 <View style={styles.dataRow}>
@@ -374,7 +472,7 @@ function BuyCourses() {
                   />
                   {/* <Text style={[styles.btmrpTextPrice]}>{8999}</Text>
                 <View style={styles.lineThrough}></View> */}
-                  <Text style={styles.dataText}>4,999</Text>
+                  <Text style={styles.dataText}>{courseDetails?.price}</Text>
                 </View>
               </View>
               {/* <View style={{ paddingHorizontal: 20 }}>
@@ -410,19 +508,19 @@ function BuyCourses() {
             <View style={styles.info}>
               <View style={styles.jd}>
                 <Text style={styles.subHead}>About Course</Text>
-                <Text style={styles.subHeadText}>
-                  TCS is a globally recognized leader in providing innovative
-                  solutions and cutting-edge technology across various
-                  industries. Founded with the vision of transforming industries
-                  and improving the quality of life, we have consistently
-                  delivered high-quality services and products to meet the
-                  evolving needs of our clients. Our approach is to prioritize
-                  customer satisfaction by offering innovative products,
-                  exceptional services, and a commitment to making a positive
-                  impact on both businesses and communities.
-                </Text>
+                <AutoHeightWebView
+                                   customStyle={`
+                                            * {font-family: -apple-system, Roboto, Arial; font-size:14px; color:#333;}
+                                            body {marginTop:20; padding:0;}
+                                          `}
+                                   source={{ html: htmlContentDesc }}
+                                   startInLoadingState
+                                   viewportContent={"width=device-width, user-scalable=no"}
+                                   scrollEnabled={false}
+                                   style={{ width: "100%", marginTop: 20 }}
+                                 />
               </View>
-              <View style={styles.topRev}>
+              {/* <View style={styles.topRev}>
                 <View style={styles.leftPart}>
                   <View style={styles.ratingNum}>
                     <Text style={styles.ratNum}>4.5</Text>
@@ -467,7 +565,7 @@ function BuyCourses() {
                     </View>
                   </View>
                 </View>
-              </View>
+              </View> */}
             </View>
           )}
 
@@ -504,9 +602,11 @@ function BuyCourses() {
             <View style={styles.jd}>
               <Text style={styles.subHead}>Notes</Text>
               <FlatList
-                data={[]}
+                data={courseNotes}
+                style={{maxHeight:320}}
                 keyExtractor={(item) => item.id}
                 renderItem={renderNote}
+                nestedScrollEnabled={true}
                 contentContainerStyle={{ padding: 16 }}
                 ListEmptyComponent={() => {
                                           return (
@@ -536,8 +636,10 @@ function BuyCourses() {
             <View style={styles.jd}>
               <Text style={styles.subHead}>Interview Questions</Text>
               <FlatList
-                data={[]}
+                data={courseNotes}
                 keyExtractor={(item) => item.id}
+                style={{maxHeight:320}}
+                nestedScrollEnabled={true}
                 renderItem={renderItemInterviewQuestions}
                 contentContainerStyle={{ paddingTop: 20 }}
                 ListEmptyComponent={() => {
@@ -590,9 +692,10 @@ function BuyCourses() {
           {errorModal}
         </Animated.ScrollView>
         <View style={styles.buttonContainer}>
-          <ThemeBtn btnTitle={"Continue"} />
+          <ThemeBtn btnTitle={"Buy Now"} />
         </View>
       </View>
+      }
     </>
   );
 }
@@ -636,6 +739,7 @@ const styles = StyleSheet.create({
   noteTitle: {
     fontSize: 16,
     fontWeight: "600",
+    width:"80%"
   },
   topRev: {
     // backgroundColor: "red",
@@ -1017,6 +1121,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontSize: 22,
     color: "#fff",
+    // backgroundColor:"red"
   },
   compText: {
     fontWeight: "600",

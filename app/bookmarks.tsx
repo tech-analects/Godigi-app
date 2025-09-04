@@ -2,9 +2,11 @@ import ThemeBtn from "@/components/ThemeBtn";
 import { Colors } from "@/constants/Colors";
 import { ImagesPath } from "@/constants/ImagesPath";
 import { AntDesign, Entypo, FontAwesome } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation, useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   FlatList,
   Image,
   Modal,
@@ -14,6 +16,7 @@ import {
 } from "react-native";
 import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import apiInstance from "./interceptors";
 
 function Bookmark() {
   const recJobArray = [
@@ -73,9 +76,44 @@ function Bookmark() {
 
   const router = useRouter();
 
-  const goToJobDetails = () => {
-    router.push("/applyJobs");
+ const goToJobDetails = (id) => {
+    console.log("hello");
+    router.push({
+      pathname:'/applyJobs',
+      params:{id:id}
+    });
   };
+
+  const [loadingData,setLoadingData] = useState(false);
+  const [bookMarkData,setBookMarkData] = useState([]);
+
+   const getBookMarks = async () => {
+     try {
+       let formData = new FormData();
+       const token = await AsyncStorage.getItem("logged_in_user_token");
+       formData.append("token", token);
+
+       console.log(formData);
+       const response = await apiInstance.post(`bookmark/list`, formData, {
+         headers: { "Content-Type": "multipart/form-data" },
+       });
+
+       console.log("response of data", response.data);
+       if(response.data.status){
+          setBookMarkData(response.data.data)
+       }
+      
+     } catch (error) {
+       console.log("this is err form adlist", error);
+       //  setHasMore(false);
+     } finally {
+       setLoadingData(false);
+     }
+   };
+
+   useEffect(()=>{
+    getBookMarks();
+},[])
 
 //   const prfBasedJobItem = ({ item }) => (
 //     <TouchableOpacity style={styles.basedJob} onPress={goToJobDetails}>
@@ -138,53 +176,76 @@ function Bookmark() {
 //     </TouchableOpacity>
 //   );
 
-const prfBasedJobItem = ({ item }) => (
-      <TouchableOpacity onPress={goToJobDetails} style={styles.basedJob}>
-        <View style={styles.topPartRec}>
-          <View style={styles.topBased}>
-            <Image
-              source={ImagesPath.fb}
-              style={{ width: 50, height: 50, objectFit: "contain" }}
-            />
-            <View>
-              <Text style={styles.roleText}>{item.role}</Text>
-              <View style={styles.compBased}>
-                <Text style={styles.compText}>{item.company}</Text>
-                <View style={styles.review}>
-                  <Text style={styles.subText}>
-                    <AntDesign
-                      name="star"
-                      size={14}
-                      color="#FFCC00"
-                      style={{ marginHorizontal: 50 }}
-                    />
-                    {item.rating}
-                  </Text>
-                </View>
+const prfBasedJobItem = ({ item, index }) => (
+    <TouchableOpacity onPress={() => goToJobDetails(item.job_id)} style={styles.basedJob}>
+      <View style={styles.topPartRec}>
+        <View style={styles.topBased}>
+          <Image
+            source={ImagesPath.fb}
+            style={{ width: 50, height: 50, objectFit: "contain" }}
+          />
+          <View>
+            <Text
+              style={[styles.roleText, { width: 200 }]}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {item.title}
+            </Text>
+            <View style={styles.compBased}>
+              <Text style={styles.compText}>{item.company_name}</Text>
+              {/* <View style={styles.review}>
+                <Text style={styles.subText}>
+                  <AntDesign
+                    name="star"
+                    size={14}
+                    color="#FFCC00"
+                    style={{ marginHorizontal: 50 }}
+                  />
+                  {item.rating}
+                </Text>
+              </View> */}
+            </View>
+            <View style={{ marginTop: 10 }}>
+              <View style={styles.btRightPart}>
+                <Entypo name="location-pin" size={22} color="grey" />
+                <Text style={styles.btsubText}>{item.city_name}</Text>
               </View>
-              <View style={{ marginTop: 10 }}>
-                <View style={styles.btRightPart}>
-                  <Entypo name="location-pin" size={22} color="grey" />
-                  <Text style={styles.btsubText}>{item.location}</Text>
-                </View>
-                <View style={styles.btRightPart}>
-                  <FontAwesome name="briefcase" size={18} color="gray" />
-                  <Text style={styles.btsubText}>{item.packageRange}</Text>
-                </View>
-                <Text style={styles.bttimeText}>posted 20h ago</Text>
+              <View style={styles.btRightPart}>
+                <FontAwesome name="briefcase" size={18} color="gray" />
+                <Text style={styles.btsubText}>{item.salary}</Text>
               </View>
+              {/* <Text style={styles.bttimeText}>posted 20h ago</Text> */}
             </View>
           </View>
-          <FontAwesome name="bookmark" size={24} color={Colors.bg} />
         </View>
-        {/* <View style={styles.bottompart}>
-          <View style={styles.btRightPart}>
-            <Entypo name="location-pin" size={24} color="grey" />
-            <Text style={styles.btsubText}>{item.location}</Text>
+        {/* <View
+          style={{
+            flexDirection: "column",
+            height: 120,
+            justifyContent: "space-between",
+            alignItems: "flex-end",
+          }}
+        >
+          <FontAwesome name="bookmark" size={24} color={Colors.bg} />
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
+            <Text style={{ fontSize: 12, fontWeight: 700, color: "gray" }}>
+              2k
+            </Text>
+            <AntDesign name="eye" size={18} color="gray" />
           </View>
         </View> */}
-      </TouchableOpacity>
-    );
+      </View>
+
+
+      {/* <View style={styles.bottompart}>
+        <View style={styles.btRightPart}>
+          <Entypo name="location-pin" size={24} color="grey" />
+          <Text style={styles.btsubText}>{item.location}</Text>
+        </View>
+      </View> */}
+    </TouchableOpacity>
+  );
 
   const [bottomSheetVisible, setBottomSheetVisible] = useState(false);
 
@@ -221,52 +282,43 @@ const prfBasedJobItem = ({ item }) => (
         </TouchableOpacity>
       </View> */}
 
-      <View style={styles.topPart}>
-        {["Courses", "Jobs"].map((item) => {
-          const isActive = activeTab === item;
-          return (
-            <Pressable
-              key={item}
-              style={[
-                styles.tab,
-                isActive && {
-                  backgroundColor: "#0069cb",
-                  borderRadius: 15,
-                  // borderTopLeftRadius: item === "My Courses" ? 15 : 0,
-                  // borderBottomLeftRadius: item === "My Courses" ? 15 : 0,
-                  // borderTopRightRadius: item === "Completed Courses" ? 15 : 0,
-                  // borderBottomRightRadius: item === "Completed Courses" ? 15 : 0,
-                },
-              ]}
-              onPress={() => setActiveTab(item)}
-            >
-              <Text
-                style={[
-                  styles.tabText,
-                  isActive && { color: "white", fontWeight: "bold" },
-                ]}
-              >
-                {item}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
+      {
+        loadingData
+        ?
+        <ActivityIndicator style={{marginTop:50}}/>
+        :
       <View style={{ paddingHorizontal: 20 }}>
-        {
-            activeTab == "Courses" 
-            ?
+      
             <FlatList
-              data={recJobArray}
+              data={bookMarkData}
               showsVerticalScrollIndicator={false}
               renderItem={prfBasedJobItem}
               keyExtractor={(item) => item.id.toString()}
+              ListEmptyComponent={() => {
+                          return (
+                            <View
+                              style={{
+                                justifyContent: "center",
+                                padding: 10,
+                              }}
+                            >
+                              <Text
+                                style={{
+                                  color: "gray",
+                                  fontWeight: 600,
+                                  textAlign: "center",
+                                  marginTop: 50,
+                                }}
+                              >
+                                No Bookmarks added!
+                              </Text>
+                            </View>
+                          );
+                        }}
             />
-            :
-            <Text style={{textAlign:'center',marginTop:50}}> No Bookmarked Jobs found.</Text>
-        }
       </View>
-      {isFilterViewOpen && (
+      }
+      {/* {isFilterViewOpen && (
         <View style={styles.filterView}>
           <View style={styles.filCont}>
             <Text style={styles.filText}>Alphabetical (A -Z)</Text>
@@ -284,7 +336,7 @@ const prfBasedJobItem = ({ item }) => (
             <Text style={styles.filText}>Ending Soon</Text>
           </View>
         </View>
-      )}
+      )} */}
       <Modal
         animationType="slide"
         transparent={true}

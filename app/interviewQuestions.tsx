@@ -114,7 +114,10 @@ const renderItem = ({ item }) => {
       </View>
       <View style={styles.textContainer}>
         <Text style={styles.title}>{item.subject_name}</Text>
+        <View style={{flexDirection:'row',justifyContent:"flex-start",alignItems:"center",gap:10}}>
         <Text style={styles.count}>30 Questions</Text>
+          <Text style={{color:"white",paddingHorizontal:5,paddingVertical:1,borderRadius:5,fontSize:10,fontWeight:600,backgroundColor:"green"}}>Free</Text>
+        </View>
       </View>
       <Icon name="chevron-right" size={18} color="#ccc" />
     </TouchableOpacity>

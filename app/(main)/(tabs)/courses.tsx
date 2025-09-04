@@ -1,3 +1,4 @@
+import apiInstance from "@/app/interceptors";
 import { Colors } from "@/constants/Colors";
 import { ImagesPath } from "@/constants/ImagesPath";
 import {
@@ -6,9 +7,10 @@ import {
   FontAwesome,
   FontAwesome5,
 } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
-import {  FlatList, Image, Pressable, TouchableOpacity } from "react-native";
+import React, { useEffect, useState } from "react";
+import {  ActivityIndicator, FlatList, Image, Pressable, TouchableOpacity } from "react-native";
 import { StyleSheet, Text, View } from "react-native";
 import Animated, {
   FadeIn,
@@ -18,63 +20,9 @@ import Animated, {
 } from "react-native-reanimated";
 
 function Application() {
- const coursesArray = [
-   {
-     id: 1,
-     name: "React Native",
-     type: "Mobile Development",
-     description: "Learn to build powerful mobile apps using React Native.",
-     enrolled: 1200,
-     price: "4,999",
-     rating: 4.7,
-     image:
-       "https://images.unsplash.com/photo-1605379399642-870262d3d051?auto=format&fit=crop&w=800&q=80",
-   },
-   {
-     id: 2,
-     name: "JavaScript Mastery",
-     type: "Web Development",
-     description: "Master modern JavaScript from the ground up.",
-     enrolled: 2500,
-     price: "3,999",
-     rating: 4.6,
-     image:
-       "https://images.unsplash.com/photo-1605379399642-870262d3d051?auto=format&fit=crop&w=800&q=80",
-   },
-   {
-     id: 3,
-     name: "UI/UX Design Essentials",
-     type: "Design",
-     description: "Build beautiful and user-friendly interfaces.",
-     enrolled: 800,
-     price: "2,999",
-     rating: 4.5,
-     image:
-       "https://images.unsplash.com/photo-1605379399642-870262d3d051?auto=format&fit=crop&w=800&q=80",
-   },
-   {
-     id: 4,
-     name: "AWS Cloud Practitioner",
-     type: "Cloud Computing",
-     description: "Get certified in AWS cloud fundamentals.",
-     enrolled: 1500,
-     price: "5,999",
-     rating: 4.8,
-     image:
-       "https://images.unsplash.com/photo-1605379399642-870262d3d051?auto=format&fit=crop&w=800&q=80",
-   },
-   {
-     id: 5,
-     name: "Data Structures in JavaScript",
-     type: "Programming",
-     description: "Learn core data structures and algorithms using JS.",
-     enrolled: 1700,
-     price: "4,499",
-     rating: 4.9,
-     image:
-       "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80",
-   },
- ];
+
+
+  const [coursesArray,setCoursesArray] = useState([]);
 
  const mycoursesArray = [
    {
@@ -106,14 +54,51 @@ function Application() {
 
   const router = useRouter();
 
-  const goToJobDetails = () => {
-    router.push("/buyCourse");
+  const goToCourseDetails = (id) => {
+    console.log("hello");
+    router.push({
+      pathname:'/buyCourse',
+      params:{id:id}
+    });
   };
 
-  const prfBasedJobItem = ({ item }) => (
-    <TouchableOpacity style={styles.basedJob} onPress={goToJobDetails}>
+  const [loadingData,setLoadingData] = useState(false)
+
+  useEffect(()=>{
+    getCoursesListing();
+  },[])
+
+   const getCoursesListing = async () => {
+     try {
+         setLoadingData(true);
+       let formData = new FormData();
+       const token = await AsyncStorage.getItem("logged_in_user_token");
+       formData.append("token", token);
+
+       console.log(formData);
+       const response = await apiInstance.post(`course/list`, formData, {
+         headers: { "Content-Type": "multipart/form-data" },
+       });
+
+       console.log("response of data", response.data);
+       if(response.data.status){
+          setCoursesArray(response.data.data)
+       }
+       
+     } catch (error) {
+       console.log("this is err form adlist", error);
+     } finally {
+       setLoadingData(false);
+     }
+   };
+
+  const prfBasedJobItem = ({ item }) => {
+    let newUrl = `https://godigiinfotech.com/${item.url}`;
+    // console.log(newUrl)
+    return(
+      <TouchableOpacity style={styles.basedJob} onPress={()=>goToCourseDetails(item.id)}>
       <Image
-        src={item.image}
+        source={{uri:newUrl}}
         style={{
           width: "30%",
           height: 100,
@@ -128,9 +113,8 @@ function Application() {
           gap: 4,
         }}
       >
-        <Text style={styles.typeCourses}>{item.type}</Text>
-        <Text style={styles.courseName}>{item.name}</Text>
-        <Text style={styles.trainerName}>Rakesh Saini</Text>
+        <Text style={styles.typeCourses}>{item.type || "FullStack Dev"}</Text>
+        <Text style={styles.courseName}>{item.title}</Text>
         <View style={styles.priceView}>
           <FontAwesome
             name="rupee"
@@ -141,10 +125,11 @@ function Application() {
         </View>
       </View>
     </TouchableOpacity>
-  );
+    )
+  }
 
   const myCourseItem = ({ item }) => (
-    <TouchableOpacity style={styles.basedJob} onPress={goToJobDetails}>
+    <TouchableOpacity style={styles.basedJob} >
       <Image
         src={item.image}
         style={{
@@ -161,9 +146,8 @@ function Application() {
           gap: 4,
         }}
       >
-        <Text style={styles.typeCourses}>{item.type}</Text>
+        <Text style={styles.typeCourses}>FullStack dev</Text>
         <Text style={styles.courseName}>{item.name}</Text>
-        <Text style={styles.trainerName}>Rakesh Saini</Text>
         <Text
           style={[
             styles.courseStat,
@@ -219,6 +203,12 @@ function Application() {
         })}
       </View>
 
+        {
+          loadingData
+          ?
+          <ActivityIndicator style={{marginTop:50}}/>
+          :
+
       <Animated.View entering={FadeInDown.duration(500)} style={{paddingHorizontal:20}}>
         {activeTab == "Courses" ? (
           <FlatList
@@ -233,20 +223,64 @@ function Application() {
             // }}
             scrollEnabled={true}
             contentContainerStyle={{ paddingBottom: 50 }}
+            ListEmptyComponent={() => {
+            return (
+              <View
+                style={{
+                  justifyContent: "center",
+                  padding: 10,
+                }}
+              >
+                <Text
+                  style={{
+                    color: "gray",
+                    fontWeight: 600,
+                    textAlign: "center",
+                    marginTop: 50,
+                  }}
+                >
+                  No Courses found!
+                </Text>
+              </View>
+            );
+          }}
           />
         ) : (
           // <Text style={{marginTop:100,color:"gray",textAlign:'center'}}>No Completed Courses !</Text>
           <FlatList
-            data={mycoursesArray}
+            data={[]}
             showsVerticalScrollIndicator={false}
             renderItem={myCourseItem}
             keyExtractor={(item) => item.id.toString()}
             style={styles.jobCont}
             scrollEnabled={true}
             contentContainerStyle={{ paddingBottom: 50 }}
+            ListEmptyComponent={() => {
+            return (
+              <View
+                style={{
+                  justifyContent: "center",
+                  padding: 10,
+                }}
+              >
+                <Text
+                  style={{
+                    color: "gray",
+                    fontWeight: 600,
+                    textAlign: "center",
+                    marginTop: 50,
+                  }}
+                >
+                  No Courses purchased yet!
+                </Text>
+              </View>
+            );
+          }}
           />
         )}
       </Animated.View>
+        }
+
       {isFilterViewOpen && (
         <View style={styles.filterView}>
           <View style={styles.filCont}>

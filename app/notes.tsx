@@ -111,10 +111,11 @@ const renderNote = ({ item }) => {
       </TouchableOpacity>
 
       {/* Actions with icons only (no functionality) */}
-      {/* <View style={styles.actions}>
-        <Feather name="download" size={24} color="#4CAF50" />
-        <Feather name="share-2" size={24} color="#2196F3" />
-      </View> */}
+      <View style={styles.actions}>
+        {/* <Feather name="download" size={24} color="#4CAF50" />
+        <Feather name="share-2" size={24} color="#2196F3" /> */}
+        <Text style={{color:"white",paddingHorizontal:5,paddingVertical:1,borderRadius:5,fontSize:10,fontWeight:600,backgroundColor:"green"}}>Free</Text>
+      </View>
     </View>
   );
 };

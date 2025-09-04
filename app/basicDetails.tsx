@@ -72,29 +72,7 @@ function BasicDetailsForm() {
             />
           </View>
         </View>
-        <Text style={Colors.inputlable}>Experience</Text>
-        <View style={styles.twoPart}>
-          <View style={styles.field}>
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <TextInput
-                placeholder="2"
-                autoComplete="off"
-                style={[Colors.inputbox, { width: 150 }]}
-              />
-              <Text style={styles.sidetext}>Years</Text>
-            </View>
-          </View>
-          <View style={styles.field}>
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <TextInput
-                placeholder="3"
-                autoComplete="off"
-                style={[Colors.inputbox, { width: 150 }]}
-              />
-              <Text style={styles.sidetext}>Months</Text>
-            </View>
-          </View>
-        </View>
+        
       </ScrollView>
       <View style={styles.nextButton}>
         <ThemeBtn btnTitle={"Update"} onPress={goBack} />
@@ -110,7 +88,7 @@ const styles = StyleSheet.create({
   },
   nextButton: {
     position: "absolute",
-    bottom: 0, // Position at the bottom of the screen
+    bottom: 40, // Position at the bottom of the screen
     left: 20,
     right: 20,
     padding: 20,
@@ -156,7 +134,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     alignItems: "center",
     paddingBottom: 20,
-    paddingTop: Platform.OS == "android" ? 40 : 60,
+    paddingTop: Platform.OS == "android" ? 50 : 60,
     shadowColor: "grey",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.85,

@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
   },
   nextButton: {
     position: "absolute",
-    bottom: 0, // Position at the bottom of the screen
+    bottom: 40, // Position at the bottom of the screen
     left: 20,
     right: 20,
     padding: 20,
@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
     elevation: 5,
     borderBottomColor: "lightgrey",
     borderBottomWidth: 0.5,
-    paddingTop: Platform.OS == "android" ? 40 : 60,
+    paddingTop: Platform.OS == "android" ? 50 : 60,
   },
   genderField: {
     marginBottom: 20,

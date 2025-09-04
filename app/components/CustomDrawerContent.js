@@ -1,6 +1,6 @@
 import { Colors } from "@/constants/Colors";
 import { ImagesPath } from "@/constants/ImagesPath";
-import { Entypo, FontAwesome5, Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { Entypo, FontAwesome, FontAwesome5, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { DrawerContentScrollView, DrawerItem } from "@react-navigation/drawer";
 import { DrawerActions } from "@react-navigation/native";
 import { useRouter } from "expo-router";
@@ -25,7 +25,7 @@ export default function CustomDrawerContent({ navigation }) {
     style: { backgroundColor: "transparent" },
   };
 
-  const {logout} = useContext(UserContext);
+  const {logout,loggedInUserName} = useContext(UserContext);
 
   return (
     <DrawerContentScrollView>
@@ -37,7 +37,7 @@ export default function CustomDrawerContent({ navigation }) {
             <Text style={styles.numPercent}>25%</Text>
           </View>
           <View style={styles.nameView}>
-            <Text style={styles.name}>Rakesh Saini</Text>
+            <Text style={styles.name}>{loggedInUserName || "User"}</Text>
             <Text style={[styles.role, { color: Colors.bg }]}>
               UI/UX Developer
             </Text>
@@ -52,19 +52,27 @@ export default function CustomDrawerContent({ navigation }) {
       </View>
 
       <View style={styles.hr} />
+      <DrawerItem
+        {...itemStyles}
+        label="Plans"
+        onPress={() => goToScreen("planScreen")}
+        icon={({ size }) => (
+          <MaterialIcons name="subscriptions" size={size} color={Colors.bg} />
+        )}
+      />
 
       {/* Drawer Items */}
-      {/* <DrawerItem
+      <DrawerItem
         {...itemStyles}
-        label="Courses"
+        label="My Courses"
         onPress={() => goToScreen("courses")}
         icon={({ size }) => (
           <FontAwesome5 name="book-open" size={20} color={Colors.bg} />
         )}
-      /> */}
+      />
       <DrawerItem
         {...itemStyles}
-        label="Jobs"
+        label="Matching Jobs"
         onPress={() => goToScreen("jobs")}
         icon={({ size }) => (
           <Entypo name="briefcase" size={24} color={Colors.bg} />
@@ -72,12 +80,20 @@ export default function CustomDrawerContent({ navigation }) {
       />
       <DrawerItem
         {...itemStyles}
-        label="Internships"
+        label="Matching Internships"
         onPress={() => goToScreen("internships")}
         icon={({ size }) => (
           <MaterialIcons name="computer" size={24} color={Colors.bg}/>
         )}
       />
+        <DrawerItem
+          {...itemStyles}
+          label="Bookmarks"
+          onPress={() => goToScreen("bookmarks")}
+          icon={({ size }) => (
+             <FontAwesome name="bookmark" size={size} color={Colors.bg} />
+          )}
+        />
       <DrawerItem
         {...itemStyles}
         label="Notes"
@@ -86,14 +102,14 @@ export default function CustomDrawerContent({ navigation }) {
           <Entypo name="text" size={size} color={Colors.bg} />
         )}
       />
-      <DrawerItem
+      {/* <DrawerItem
         {...itemStyles}
         label="Exams"
         onPress={() => goToScreen("exams")}
         icon={({ size }) => (
           <MaterialIcons name="assignment" size={size} color={Colors.bg} />
         )}
-      />
+      /> */}
       <DrawerItem
         {...itemStyles}
         label="Interview Questions"
@@ -102,7 +118,7 @@ export default function CustomDrawerContent({ navigation }) {
           <Ionicons name="help-circle" size={size} color={Colors.bg} />
         )}
       />
-      <DrawerItem
+      {/* <DrawerItem
         {...itemStyles}
         label="Class Updates"
         onPress={() => goToScreen("classUpdates")}
@@ -125,11 +141,11 @@ export default function CustomDrawerContent({ navigation }) {
         icon={({ size }) => (
           <MaterialIcons name="payments" size={size} color={Colors.bg} />
         )}
-      />
+      /> */}
 
       <DrawerItem
         {...itemStyles}
-        label="How can we Improve ?"
+        label="Help"
         onPress={() => goToScreen("feedback")}
         icon={({ size }) => (
           <Entypo name="message" size={size} color={Colors.bg} />

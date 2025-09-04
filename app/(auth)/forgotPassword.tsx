@@ -63,8 +63,8 @@ function ForgotPassword() {
            headers: { "Content-Type": "multipart/form-data" },
          }
        );
-       console.log(response.data,response.data.status)
-       if(response.data.status){
+       console.log(response.data,JSON.parse(response.data.status))
+       if(JSON.parse(response.data.status)){
           goToVerifyCode(response.data.otp, response.data.user_id);
        }
        else{

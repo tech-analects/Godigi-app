@@ -29,7 +29,7 @@ function AppContent() {
     Poppins: require("../assets/fonts/Poppins-Regular.ttf"),
   });
 
-  const { isLoggedIn, isChecking } = useContext(UserContext);
+  const { isLoggedIn, isChecking,isFirstLaunch } = useContext(UserContext);
   const [isAppReady, setIsAppReady] = useState(false);
 
   useEffect(() => {
@@ -57,11 +57,12 @@ function AppContent() {
       isLoggedIn={isLoggedIn}
       isChecking={isChecking}
       isAppReady={isAppReady}
+      isFirstLaunch={isFirstLaunch}
     />
   );
 }
 
-export function RootInner({isLoggedIn,isChecking,isAppReady}) {
+export function RootInner({isLoggedIn,isChecking,isAppReady,isFirstLaunch}) {
 
   // useEffect(() => {
   //   setTimeout(() => {
@@ -74,14 +75,20 @@ export function RootInner({isLoggedIn,isChecking,isAppReady}) {
    useEffect(() => {
      console.log("isloogedin is", isLoggedIn, isChecking, isAppReady);
      if (!isChecking && isAppReady) {
-       if (isLoggedIn) {
-         router.replace("/(main)/(tabs)/home");
-        //  router.replace("/(main)/(tabs)/home");
-        } else {
-        //  router.replace("/(main)/(tabs)/home");
-         console.log("Goinf to login ");
-         router.replace("/(auth)/login");
-       }
+      if(isFirstLaunch){
+        router.push('/WalkthroughScreen')
+      }
+      else{
+
+        if (isLoggedIn) {
+          router.replace("/(main)/(tabs)/home");
+         //  router.replace("/(main)/(tabs)/home");
+         } else {
+         //  router.replace("/(main)/(tabs)/home");
+          console.log("Goinf to login ");
+          router.replace("/(auth)/login");
+        }
+      }
      }
    }, [isLoggedIn]);
 

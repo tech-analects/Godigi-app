@@ -42,6 +42,7 @@ function Home() {
   const [notesData,setNotesData] = useState([]);
   const [interviewQuestionsData, setInterviewQuestionsData] = useState([]);
   const [jobsData, setJobsData] = useState([]);
+  const [coursesData, setCoursesData] = useState([]);
   const [bannersData, setBannersData] = useState([]);
   const [loadingDashData, setLoadingDashData] = useState(false);
 
@@ -196,86 +197,7 @@ function Home() {
     },
   ];
 
- const courses = [
-   {
-     id: "course-001",
-     name: "Full-Stack Web Development",
-     type: "Development",
-     description:
-       "Learn HTML, CSS, JavaScript, React, Node.js, and MongoDB to build full-stack apps.",
-     enrolled: 1456,
-     price: 4999,
-     priceMRP:8790,
-     rating: 4.7,
-     image:
-       "https://images.pexels.com/photos/1181675/pexels-photo-1181675.jpeg",
-   },
-   {
-     id: "course-002",
-     name: "UI/UX Design Fundamentals",
-     type: "Design",
-     description:
-       "Master the basics of UI and UX design using Figma, Adobe XD, and design systems.",
-     enrolled: 872,
-     price: 2999,
-      priceMRP:9999,
-     rating: 4.5,
-     image:
-       "https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg",
-   },
-   {
-     id: "course-003",
-     name: "Machine Learning with Python",
-     type: "AI & ML",
-     description:
-       "Build intelligent systems using Python, NumPy, Pandas, scikit-learn, and TensorFlow.",
-     enrolled: 2103,
-      priceMRP:9999,
-     price: 5999,
-     rating: 4.8,
-     image:
-       "https://images.pexels.com/photos/3184328/pexels-photo-3184328.jpeg",
-   },
-   {
-     id: "course-004",
-     name: "Digital Marketing Masterclass",
-     type: "Marketing",
-     description:
-       "Learn SEO, content marketing, social media, and paid ads from scratch.",
-     enrolled: 1389,
-      priceMRP:9999,
-     price: 3499,
-     rating: 4.4,
-     image:
-       "https://images.pexels.com/photos/3184466/pexels-photo-3184466.jpeg",
-   },
-   {
-     id: "course-005",
-     name: "Cloud Computing with AWS",
-     type: "Cloud & DevOps",
-     description:
-       "Get hands-on with AWS services like EC2, S3, Lambda, and prepare for certification.",
-     enrolled: 980,
-     price: 5799,
-      priceMRP:9999,
-     rating: 4.6,
-     image:
-       "https://images.pexels.com/photos/3861969/pexels-photo-3861969.jpeg",
-   },
-   {
-     id: "course-006",
-     name: "Flutter App Development",
-     type: "Mobile Development",
-     description:
-       "Build cross-platform mobile apps using Dart and Flutter framework.",
-     enrolled: 1192,
-     price: 3999,
-      priceMRP:9999,
-     rating: 4.7,
-     image:
-       "https://images.pexels.com/photos/3601092/pexels-photo-3601092.jpeg",
-   },
- ];
+
 
 const exams = [
   { id: "1", title: "HTML Basics", type: "Free", topic: "html" },
@@ -308,8 +230,12 @@ const topicIcons = {
       params: { id: id },
     });
   };
-  const goToCourseDetailsPage = () => {
-    router.push("/buyCourse");
+  const goToCourseDetailsPage = (id) => {
+    console.log("hello");
+    router.push({
+      pathname: "/buyCourse",
+      params: { id: id },
+    });
   };
  const goToIntenshipDetails = (id) => {
    router.push({
@@ -405,25 +331,27 @@ const topicIcons = {
     // <Text>hello</Text>
   );
 
-  const coursesListItem = ({ item }) => (
-    <TouchableOpacity style={styles.basedJob}>
+  const coursesListItem = ({ item }) => {
+   let newUrl = `https://godigiinfotech.com/${item.url}`;
+    return(
+      <TouchableOpacity style={styles.basedJob} onPress={()=>goToCourseDetailsPage(item.id)}>
       <Image
-        src={item.image}
+        source={{uri:newUrl}}
         style={{ width: "100%", height: 150, borderRadius: 10 }}
       />
       <View style={styles.typeViewCourses}>
-        <Text style={styles.typeCourses}>{item.type}</Text>
+        <Text style={styles.typeCourses}>{item.type || "Coding"}</Text>
         {/* <View style={{ flexDirection: "row", gap: 5 }}>
           <AntDesign name="star" size={18} color="#F9A64B" />
           <Text style={styles.ratingText}>{item.rating}</Text>
         </View> */}
       </View>
-      <Text style={styles.coursesName}>{item.name}</Text>
+      <Text style={styles.coursesName}>{item.title}</Text>
       <View style={styles.hr}></View>
       <View style={styles.bottompartCourses}>
         <View style={styles.btRightPartCourses}>
           <Text style={styles.btmrpText}>MRP</Text>
-          <Text style={[styles.btmrpTextPrice]}>{item.priceMRP}</Text>
+          <Text style={[styles.btmrpTextPrice]}>{item.mrp || "NA"}</Text>
           <View style={styles.lineThrough}></View>
         </View>
         <View style={styles.btLeftPart}>
@@ -432,7 +360,8 @@ const topicIcons = {
         </View>
       </View>
     </TouchableOpacity>
-  );
+    )
+  }
 
   const logAllAsyncStorageItems = async () => {
     try {
@@ -453,7 +382,7 @@ const topicIcons = {
 
   const renderInternshipCard = ({ item }) => {
      let newUrl = `https://godigiinfotech.com/${item.url}`;
-     console.log("inetndfhdm ",newUrl)
+    //  console.log("inetndfhdm ",newUrl)
     return (
       <TouchableOpacity
         style={styles.basedJob}
@@ -602,6 +531,7 @@ const topicIcons = {
           setNotesData(response.data.data?.notes);
           setInterviewQuestionsData(response.data.data?.question_answers);
           setBannersData(response.data.data?.banners);
+          setCoursesData(response.data.data?.courses);
           // console.log("thisesa are jobs",response.data.data.jobs.length);
           setJobsData(response.data.data.jobs);
         }
@@ -633,7 +563,7 @@ const topicIcons = {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        <View style={styles.topPart}>
+        {/* <View style={styles.topPart}>
           <View style={styles.topPartTwo}>
             <TouchableOpacity style={styles.searchBg} onPress={goToSearch}>
               <TextInput
@@ -652,7 +582,7 @@ const topicIcons = {
               />
             </TouchableOpacity>
           </View>
-        </View>
+        </View> */}
 
         {loadingDashData ? (
           <ActivityIndicator style={{ marginTop: 50 }} />
@@ -733,7 +663,7 @@ const topicIcons = {
               />
             </Animated.View>
 
-            {/* <Animated.View
+            <Animated.View
               entering={FadeInRight.duration(500).delay(100)}
               style={styles.pagerView}
             >
@@ -747,7 +677,7 @@ const topicIcons = {
               </View>
               <FlatList
                 horizontal
-                data={courses}
+                data={coursesData}
                 renderItem={coursesListItem}
                 keyExtractor={(item) => item.id.toString()}
                 showsHorizontalScrollIndicator={false}
@@ -774,7 +704,7 @@ const topicIcons = {
                   );
                 }}
               />
-            </Animated.View> */}
+            </Animated.View>
 
             {/* <View>
           <LinearGradient

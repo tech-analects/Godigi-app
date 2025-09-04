@@ -121,7 +121,10 @@ function ApplyJobs() {
   };
 
   const [loading,setLoading] = useState(false);
+  const [loadingApply,setLoadingApply] = useState(false);
   const [jobDetails, setJobDetails] = useState([]);
+  const [isBookmarkAdded, setIsBookmarkAdded] = useState(false);
+  const [addingBookmark, setAddingBookmark] = useState(false);
 
 
   const getJobDetails=async()=>{
@@ -181,6 +184,47 @@ function ApplyJobs() {
        }
      };
 
+     const openMail=(toEmail)=>{
+       const mailUrl = `mailto:${toEmail}?subject=${encodeURIComponent("Job enquiry")}&body=${encodeURIComponent("Hello," )}`;
+       Linking.canOpenURL(mailUrl)
+    .then((supported) => {
+      if (!supported) {
+        Alert.alert("Error", "No email app found to open.");
+      } else {
+        return Linking.openURL(mailUrl);
+      }
+    })
+    .catch((err) => console.error("An error occurred", err));
+     }
+
+   const applyJobUpdate = async () => {
+       try {
+        setLoadingApply(true)
+         let formData = new FormData();
+         const token = await AsyncStorage.getItem("logged_in_user_token");
+         formData.append("token", token);
+  
+         console.log(formData);
+         const response = await apiInstance.post(
+           `job/update-job-apply-count/${jobId}`,
+           formData,
+           {
+             headers: { "Content-Type": "multipart/form-data" },
+           }
+         );
+  
+        //  console.log("response of count apply data", response.data);
+        if(response.data.status){
+           setIsSuccessModalOpen(true)
+         }
+       } catch (error) {
+         console.log("this is err ", error);
+       }
+       finally{
+        setLoadingApply(false)
+       }
+     };
+
     const successModal = (
       <Modal
         visible={isSuccessModalOpen}
@@ -234,6 +278,11 @@ function ApplyJobs() {
                 </Text>
               </View>
             </View>
+            <ThemeBtn
+              btnTitle={"Send Mail"}
+              onPress={()=>openMail("787878")}
+              // onPress={()=>openMail("saurabhtambolkar22@gmail.com")}
+            />
             <ThemeBtn
               btnTitle={"Cancel"}
               onPress={() => setIsSuccessModalOpen(false)}
@@ -315,6 +364,62 @@ function ApplyJobs() {
     </html>
   `;
 
+  const addBookmark=async()=>{
+    try{
+      setAddingBookmark(true);
+       const userTok = await AsyncStorage.getItem("logged_in_user_token");
+      const formdata = new FormData();
+      formdata.append("token", userTok);
+      formdata.append("job_id", jobId);
+      const response = await apiInstance.post(
+        `bookmark/store`,
+        formdata,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+      console.log(response.data)
+      if(response.data.status){
+        setIsBookmarkAdded(true);
+        let newDataWithBookmarkAdded = {...jobDetails,bookmarkId:response.data.bookmark_id}
+        // console.log(newDataWithBookmarkAdded,newDataWithBookmarkAdded.bookmarkId)
+        setJobDetails(newDataWithBookmarkAdded);
+      }
+    }
+    catch(err){
+      console.log(err)
+    }
+    finally{
+      setAddingBookmark(false)
+    }
+  }
+  const removeBookmark=async()=>{
+    try{
+      setAddingBookmark(true);
+       const userTok = await AsyncStorage.getItem("logged_in_user_token");
+      const formdata = new FormData();
+      formdata.append("token", userTok);
+      const response = await apiInstance.post(
+        `bookmark/delete/${jobDetails?.bookmarkId}`,
+        // `bookmark/delete/5`,
+        formdata,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+      console.log(response.data)
+      if(response.data.status){
+        setIsBookmarkAdded(false);
+      }
+    }
+    catch(err){
+      console.log(err)
+    }
+    finally{
+      setAddingBookmark(false)
+    }
+  }
+
   return (
     <>
       {scrollPosition < 20 ? (
@@ -343,7 +448,17 @@ function ApplyJobs() {
                   />
                 </View>
                 <View style={styles.rightside}>
-                  <FontAwesome name="bookmark" size={24} color="#fff" />
+                  {
+                    addingBookmark
+                    ?
+                    <ActivityIndicator color={"#fff"}/>
+                    :
+                    isBookmarkAdded
+                    ?
+                    <FontAwesome name="bookmark" size={24} color="#fff" onPress={removeBookmark}/>
+                    :
+                    <FontAwesome name="bookmark-o" size={24} color="#fff" onPress={addBookmark} />
+                  }
                   {/* <Entypo name="share" size={24} color="#fff" /> */}
                 </View>
               </View>
@@ -572,8 +687,9 @@ function ApplyJobs() {
           </ScrollView>
           <View style={styles.btnView}>
             <ThemeBtn
-              btnTitle={"Continue"}
-              onPress={() => setIsSuccessModalOpen(!isSuccessModalOpen)}
+              btnTitle={"Apply"}
+              onPress={applyJobUpdate}
+              loadingBtn={loadingApply}
             />
           </View>
         </View>
@@ -602,7 +718,7 @@ const styles = StyleSheet.create({
     padding: 40,
     borderRadius: 30,
     width: "90%",
-    height: "40%",
+    height: "50%",
   },
   modalImageContainer: {
     justifyContent: "center",

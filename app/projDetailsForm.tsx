@@ -87,56 +87,41 @@ function ProjDetailsForm() {
 
   return (
     <View style={styles.container}>
+         <View style={styles.topPart}>
+                <AntDesign name="arrowleft" size={24} color="black" onPress={goBack} />
+                <Text style={styles.pageName}>Career Details</Text>
+              </View>
+
       <ScrollView style={styles.formContainer}>
-        <View style={styles.topPart}>
-          <AntDesign
-            name="arrowleft"
-            size={24}
-            color="black"
-            onPress={goBack}
-          />
-          <Text style={styles.heading}>Project Details</Text>
-        </View>
-
-        {/* Project Form Fields */}
-        {["Project Name", "Role", "Project URL"].map((label, index) => (
-          <View style={styles.field} key={index}>
-            <Text style={Colors.inputlable}>{label}</Text>
-            <TextInput
-              placeholder={label}
-              autoComplete="off"
-              style={Colors.inputbox}
-            />
-          </View>
-        ))}
-
-        <View style={styles.fromPart}>
+       <Text style={Colors.inputlable}>Experience</Text>
+        <View style={styles.twoPart}>
           <View style={styles.field}>
-            <Text style={Colors.inputlable}>From</Text>
-            <TextInput
-              placeholder="From"
-              autoComplete="off"
-              style={[Colors.inputbox, { width: 150 }]}
-            />
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <TextInput
+                placeholder="2"
+                autoComplete="off"
+                style={[Colors.inputbox, { width: 150 }]}
+              />
+              <Text style={styles.sidetext}>Years</Text>
+            </View>
           </View>
           <View style={styles.field}>
-            <Text style={Colors.inputlable}>To</Text>
-            <TextInput
-              placeholder="To"
-              autoComplete="off"
-              style={[Colors.inputbox, { width: 150 }]}
-            />
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <TextInput
+                placeholder="3"
+                autoComplete="off"
+                style={[Colors.inputbox, { width: 150 }]}
+              />
+              <Text style={styles.sidetext}>Months</Text>
+            </View>
           </View>
         </View>
 
-        <Text style={Colors.inputlable}>Description (optional)</Text>
-        <TextInput
-          style={styles.textArea}
-          multiline
-          numberOfLines={4}
-          placeholder="Project description (optional)"
-          placeholderTextColor="grey"
-        />
+        <Text style={[Colors.inputlable,{marginTop:40}]}>Job Preference City</Text>
+        <TextInput style={Colors.inputbox} placeholder="Enter city name" placeholderTextColor={"gray"}/>
+
+        <Text style={[Colors.inputlable,{marginTop:40}]}>Job Preference Skills</Text>
+        <TextInput style={Colors.inputbox} placeholder="Enter skills" placeholderTextColor={"gray"}/>
       </ScrollView>
 
       {/* Positioned Button at the Bottom */}
@@ -156,19 +141,51 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 80, // Make space for the button
   },
+  pageName: {
+    fontSize: 20,
+    fontWeight: "bold",
+  },
   topPart: {
-    marginBottom: 10,
+    backgroundColor: "#fff",
     flexDirection: "row",
-    gap: 20,
+    gap: 10,
+    paddingHorizontal: 20,
     alignItems: "center",
-    paddingTop: Platform.OS == "android" ? 40 : 60,
+    paddingBottom: 20,
+    paddingTop: Platform.OS == "android" ? 50 : 860,
+    shadowColor: "grey",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.85,
+    shadowRadius: 5,
+    elevation: 5,
+    borderBottomColor: "lightgrey",
+    borderBottomWidth: 0.5,
   },
   heading: {
     fontSize: 20,
     fontWeight: "bold",
   },
+    twoPart: {
+    flexDirection: "row",
+    gap: 10,
+    justifyContent: "space-between",
+  },
   field: {
     marginBottom: 10,
+  },
+  inpView: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  sidetext: {
+    position: "absolute",
+    right: 10,
+    color: "grey",
+  },
+   form: {
+    marginBottom: 50,
+    padding: 20,
   },
   fromPart: {
     flexDirection: "row",
@@ -189,7 +206,7 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     position: "absolute",
-    bottom: 20,
+    bottom: 40,
     left: 20,
     right: 20,
     paddingHorizontal: 20,

@@ -42,6 +42,7 @@
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-native": "0.79.5",
+    "react-native-app-intro-slider": "^4.0.4",
     "react-native-autoheight-webview": "^1.6.5",
     "react-native-checkbox": "^2.0.0",
     "react-native-gesture-handler": "~2.24.0",

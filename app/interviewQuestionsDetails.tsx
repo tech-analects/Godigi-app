@@ -208,7 +208,7 @@ export default function InterViewQuestionsDetails() {
        </View>
 
        <View
-         style={{ height: "auto", marginTop: 10, flexDirection: "row", gap: 5 }}
+         style={{ height: "auto", marginTop: 10, flexDirection: "column", gap: 5 }}
        >
          <Text style={styles.answerText}>
            Answer :
@@ -228,7 +228,7 @@ export default function InterViewQuestionsDetails() {
            startInLoadingState
            viewportContent={"width=device-width, user-scalable=no"}
            scrollEnabled={false}
-           style={{ width: "90%" }}
+           style={{ width: "100%" }}
          />
        </View>
      </View>
@@ -404,6 +404,6 @@ const styles = StyleSheet.create({
   answerText: {
     fontSize: 13,
     fontWeight: 700,
-    color: "black",
+    color: Colors.bg,
   },
 });

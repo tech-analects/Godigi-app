@@ -9,6 +9,7 @@ export const UserContext = createContext();
 // UserProvider Component
 export const UserProvider = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [loggedInUserName, setLoggedInUserName] = useState("");
   const [isFirstLaunch, setIsFirstLaunch] = useState(true);
     const [isChecking, setIsChecking] = useState(true);
     const [checkTokenTrigger, setCheckTokenTrigger] = useState(false);
@@ -26,9 +27,16 @@ useEffect(() => {
     try {
       setIsChecking(true);
       const userTok = await AsyncStorage.getItem("logged_in_user_token");
+      const hasLaunched = await AsyncStorage.getItem("hasLaunched");
+      const userName = await AsyncStorage.getItem("logged_in_user_name");
+      console.log(hasLaunched)
+      if(hasLaunched == "true"){
+         setIsFirstLaunch(false);
+      }
       if (userTok) {
         console.log(userTok)
         setIsLoggedIn(true);
+        setLoggedInUserName(userName)
       } else {
         setIsLoggedIn(false);
       }
@@ -53,7 +61,10 @@ const logout = async () => {
     // if (response.data.status) {
       await AsyncStorage.multiRemove([
         "logged_in_user_token",
-        "hasLaunched",
+        "logged_in_user_name",
+        "logged_in_user_type",
+        "logged_in_user_id",
+        // "hasLaunched",
       ]);
       setIsLoggedIn(false);
       const keys = await AsyncStorage.getAllKeys();
@@ -78,6 +89,8 @@ const logout = async () => {
         isFirstLaunch,
         setIsFirstLaunch,
         logout,
+        setLoggedInUserName,
+        loggedInUserName
       }}
     >
       {children}

@@ -90,7 +90,7 @@ export function LoginForm() {
     setIsChecked(!isChecked);
   };
 
-  const { isLoggedIn, setIsLoggedIn } = useContext(UserContext);
+  const { isLoggedIn, setIsLoggedIn ,setLoggedInUserName} = useContext(UserContext);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -137,11 +137,14 @@ export function LoginForm() {
         let user_token = response.data.token;
         let user_id = response.data.data.user_id;
         let user_type = response.data.data.user_type;
+        let user_name = response.data.data.user_name;
         console.log(user_token,user_id,user_type)
         await AsyncStorage.setItem("logged_in_user_token", user_token);
         await AsyncStorage.setItem("logged_in_user_type", user_type);
         await AsyncStorage.setItem("logged_in_user_id", user_id);
+        await AsyncStorage.setItem("logged_in_user_name", user_name);
         setIsLoggedIn(true);
+        setLoggedInUserName(response.data.data.user_name);
         router.push("/(tabs)/");
       } else {
         setErr(response.data.message);
@@ -153,6 +156,28 @@ export function LoginForm() {
       setLoading(false);
     }
   };
+
+  const goToWalk=()=>{
+    router.push("/WalkthroughScreen")
+  }
+
+  const logAllAsyncStorageItems = async () => {
+      try {
+        const keys = await AsyncStorage.getAllKeys();
+        const stores = await AsyncStorage.multiGet(keys);
+        console.log(keys)
+        stores.forEach(([key, value]) => {
+          try {
+            const parsedValue = JSON.parse(value);
+            console.log(`${key}:`, parsedValue);
+          } catch (err) {
+            console.log(`${key}:`, value); // fallback if not JSON
+          }
+        });
+      } catch (error) {
+        console.error("Failed to load AsyncStorage:", error);
+      }
+    };
 
 
   const goToForgotPass = () => {

@@ -149,7 +149,7 @@ export default function TabLayout() {
           }}
         /> */}
 
-        {/* <Tabs.Screen
+        <Tabs.Screen
           name="courses"
           options={{
             title: "Courses",
@@ -186,7 +186,7 @@ export default function TabLayout() {
               </TouchableOpacity>
             ),
           }}
-        /> */}
+        />
         <Tabs.Screen
           name="jobs"
           options={{

@@ -25,7 +25,7 @@ import Animated, { FadeInDown } from "react-native-reanimated";
 function Profile() {
   const router = useRouter();
 
-  const { logout } = useContext(UserContext);
+  const { logout,loggedInUserName } = useContext(UserContext);
 
   const goToIntroForm = () => {
     router.push("/introForm");
@@ -49,6 +49,9 @@ function Profile() {
 
   const goToProjDetailsForm = () => {
     router.push("/projDetailsForm");
+  };
+  const goToPassChangeForm = () => {
+    router.push("/changePass");
   };
 
   const goToSkillsForm = () => {
@@ -80,7 +83,7 @@ function Profile() {
             <Text style={styles.numPercent}>25%</Text>
           </View>
           <View style={styles.nameView}>
-            <Text style={styles.name}>Rakesh Saini</Text>
+            <Text style={styles.name}>{loggedInUserName || "User"}</Text>
             <Text style={styles.role}>UI/UX Developer</Text>
           </View>
         </View>
@@ -167,12 +170,22 @@ function Profile() {
         <TouchableOpacity onPress={goToProjDetailsForm} style={styles.prfBtn}>
           <View style={styles.right}>
             <Entypo name="pie-chart" size={24} color="#0069cb" />
-            <Text style={styles.btnTitle}>Projects</Text>
+            <Text style={styles.btnTitle}>Career Details</Text>
           </View>
           <View style={styles.left}>
             <AntDesign name="plus" size={22} color="#0069cb" />
             <Text style={styles.add}>Add</Text>
           </View>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={goToPassChangeForm} style={styles.prfBtn}>
+          <View style={styles.right}>
+           <Entypo name="key" size={24} color="#0069cb" />
+            <Text style={styles.btnTitle}>Change Password</Text>
+          </View>
+          {/* <View style={styles.left}>
+            <AntDesign name="plus" size={22} color="#0069cb" />
+            <Text style={styles.add}>Add</Text>
+          </View> */}
         </TouchableOpacity>
         {/* <TouchableOpacity onPress={goToCerti} style={styles.prfBtn}>
           <View style={styles.right}>
