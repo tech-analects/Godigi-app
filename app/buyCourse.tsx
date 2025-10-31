@@ -1,53 +1,66 @@
 import ThemeBtn from "@/components/ThemeBtn";
+import { Colors } from "@/constants/Colors";
 import { ImagesPath } from "@/constants/ImagesPath";
 import {
   AntDesign,
   Entypo,
   Feather,
   FontAwesome,
-  Ionicons,
-  MaterialCommunityIcons,
-  MaterialIcons,
+  FontAwesome5,
+  Fontisto
 } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import { useRouter } from "expo-router";
-import { BlurView } from "expo-blur";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
-  Image,
-  ImageBackground,
+  Linking,
   Modal,
   Platform,
-  Pressable,
-  ScrollView,
   StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
-import { Colors } from "@/constants/Colors";
-import Icon from "react-native-vector-icons/FontAwesome5";
-import { SafeAreaView } from "react-native-safe-area-context";
-import Animated, { FadeInDown } from "react-native-reanimated";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import apiInstance from "./interceptors";
 import AutoHeightWebView from "react-native-autoheight-webview";
+import Animated, { Easing, FadeInDown, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+import Demo from "./Demo";
+import apiInstance from "./interceptors";
+import SwipeButton from "rn-swipe-button"
+import VideoListScreen from "./Video"
+import { Image } from 'expo-image';
 
 function BuyCourses() {
   const navigation = useNavigation();
   const [selectedInfo, setSelectedInfo] = useState("Overview");
   const goBack = () => {
-    navigation.goBack();
-  };
+  // router.back(); // goes back
+  // router.setParams({ my: "false" }); // set params on previous screen
+  // console.log("false sending")
+  router.replace({ pathname: '/courses', params: {} });
+
+};
 
   const route = useRoute();
-  console.log(route?.params?.id)
-  const courseId = route?.params?.id
+const local = useLocalSearchParams();
 
-  const type = ["Online","Projects", "Practicals"];
+const courseId = route?.params?.id ?? local?.courseId;
+const isPurchased = route?.params?.isPurchased ?? local?.isPurchased;
+
+ useEffect(()=>{
+  if(isPurchased){
+    getCourseDetails();
+    console.log('ispurchased is trur here so calling the courses api again')
+  }
+ },[isPurchased])
+
+
+
+
 
   const jobArray = [
     {
@@ -56,7 +69,7 @@ function BuyCourses() {
     },
     {
       id: 2,
-      name: "Course Content",
+      name: "FAQ's",
     },
     {
       id: 3,
@@ -64,47 +77,57 @@ function BuyCourses() {
     },
     {
       id: 4,
-      name: "Certificate",
+      name: "Interview Questions",
     },
     {
       id: 5,
-      name: "Interview Questions",
+      name: "Certificate",
     },
   ];
 
-  const [loading,setLoading] = useState(false)
-  const [courseDetails,setCourseDetails] = useState([]);
-  const [courseNotes,setCourseNotes] = useState([]);
+  const [loading, setLoading] = useState(false)
+  const [buying, setBuying] = useState(false)
+  const [isCoursePurchased, setIsCoursePurchased] = useState(false)
+  const [courseDetails, setCourseDetails] = useState([]);
+  const [courseImage, setCourseImage] = useState("");
+  const [courseNotes, setCourseNotes] = useState([]);
+  const [faqs, setFaqs] = useState([]);
 
-  useEffect(()=>{
+  useEffect(() => {
     getCourseDetails();
     addCourseView();
-  },[])
+  }, [])
 
-  const getCourseDetails=async()=>{
+  const getCourseDetails = async () => {
     try {
       setLoading(true)
-       let formData = new FormData();
-       const token = await AsyncStorage.getItem("logged_in_user_token");
-       formData.append("token", token);
+      let formData = new FormData();
+      const token = await AsyncStorage.getItem("logged_in_user_token");
+      formData.append("token", token);
 
-       console.log(formData);
-       const response = await apiInstance.post(
-         `course/details/${courseId}`,
-         formData,
-         {
-           headers: { "Content-Type": "multipart/form-data" },
-         }
-       );
-       if(response.data.status){
-         console.log(response.data.data.course_details[0])
+      // console.log(formData);
+      const response = await apiInstance.post(
+        `course/details/${courseId}`,
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+      if (response.data.status) {
+        // console.log("course details", response.data.data)
         setCourseDetails(response.data.data.course_details[0])
+        let imgLink = response.data.data.course_details[0].url
+        let newLink =`https://godigiinfotech.com/${imgLink}`
+        setCourseImage(newLink)
         setCourseNotes(response.data.data.course_notes)
-       }
+        setFaqs(response.data.data.course_faqs)
+        setIsCoursePurchased(response.data.data.is_purchased)
+        // console.log("this is course is purchased",response.data.data.is_purchased)
+      }
     } catch (error) {
       console.log(error)
     }
-    finally{
+    finally {
       setLoading(false)
     }
   }
@@ -115,7 +138,7 @@ function BuyCourses() {
         styles.jobCategoryItem,
         selectedInfo === item.name && styles.selectedJobCategory,
       ]}
-      onPress={() => {setSelectedInfo(item.name);}}
+      onPress={() => { setSelectedInfo(item.name); }}
     >
       <Text
         style={[
@@ -131,43 +154,111 @@ function BuyCourses() {
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
 
-  const qualifications = [
-    "Bachelor's degree in Computer Science or related field.",
-    "2+ years of experience in Frontend Development.",
-    "Proficiency in JavaScript, React, and modern front-end frameworks.",
-    "Experience with HTML, CSS, and responsive design principles.",
-    "Familiarity with version control systems (Git).",
-    "Strong problem-solving and debugging skills.",
-    "Excellent communication and teamwork abilities.",
-  ];
-
-  const renderItem = ({ item }) => (
-    <View style={styles.itemContainer}>
-      <Text style={styles.iconText}>{item.icon}</Text>
-      <Text style={styles.subHeadText}>{item.perk}</Text>
-    </View>
-  );
-
-  const requiredSkills = [
-    { id: "1", skill: "React Native" },
-    { id: "2", skill: "JavaScript" },
-    { id: "3", skill: "HTML-CSS" },
-    { id: "4", skill: "Version control" },
-    { id: "5", skill: "Redux" },
-    { id: "6", skill: "Rest API" },
-    { id: "7", skill: "Database " },
-  ];
-
   const renderSkills = ({ item }) => (
     <View style={styles.skillContainer}>
-      <Text style={styles.skillText}>{item.skill}</Text>
+      <Text style={styles.skillText}>{item.subject_name}</Text>
     </View>
   );
 
+  const width = useSharedValue(0);
+
+  const animatedStyles = useAnimatedStyle(() => {
+    return {
+      width: width.value,
+    };
+  });
+
+  useEffect(() => {
+    width.value = withTiming(300, {
+      duration: 5000,
+      easing: Easing.inOut(Easing.ease),
+    });
+  }, []);
+
+  const extendFaq = (id) => {
+    console.log(id)
+    let newFaq = faqs.map((item) => item.id == id ? { ...item, extended: !item.extended } : { ...item, extended: false })
+    console.log(newFaq)
+    setFaqs(newFaq)
+  }
+
+  const renderFaq = ({ item }) => {
+    return (
+      //   <TouchableOpacity onPress={()=>extendFaq(item.id)} style={[styles.faqView, item.extended
+      // ? { borderTopColor: Colors.bg, borderTopWidth: 3 }
+      // : {}]}>
+      <TouchableOpacity onPress={() => extendFaq(item.id)} style={[styles.faqView]}>
+        {
+          item.extended &&
+          // <View style={[styles.borderView,animatedStyles]}></View>
+          <Demo />
+        }
+        <View style={{ flexDirection: 'row', justifyContent: "space-between", alignItems: "center" }}>
+          <Text style={{ fontSize: 14, color: item.extended ? Colors.bg : "black", width: "90%", fontWeight: item.extended ? 600 : 400, }} numberOfLines={item.extended ? 10 : 2}>{item.question}</Text>
+          <Entypo name="plus" size={24} color={Colors.bg} />
+        </View>
+        {
+          item.extended &&
+          <View style={{ backgroundColor: "#F2F4FA", borderRadius: 5, padding: 3, marginTop: 10 }}>
+            <AutoHeightWebView
+              style={{ width: "100%" }}
+              customStyle={`
+    * {
+      font-size: ${Platform.OS === "android" ? 13 : 40}px !important;
+      line-height: ${Platform.OS === "android" ? 18 : 50}px !important;
+      color: #000;
+      box-sizing: border-box;
+      word-wrap: break-word;
+    }
+    body {
+      padding: 5px;
+      margin: 0;
+      background-color: transparent;
+      -webkit-text-size-adjust: 100%;
+      overflow: hidden !important; /* hide scrollbars */
+    }
+    ::-webkit-scrollbar {
+      display: none; /* for WebKit browsers */
+    }
+  `}
+              source={{ html: item.answer }}
+              scalesPageToFit={false}
+              scrollEnabled={true}
+            />
+
+          </View>
+
+        }
+      </TouchableOpacity>
+    )
+  }
+
   const router = useRouter();
+   const goToChatScreen = () => {
+    router.push({
+      pathname: '/chatbot',
+      params: { courseId: courseId,isPurchasedCourse:false }
+    })
+  }
+
+
+  React.useEffect(() => {
+    if (isPurchased) {
+      console.log("User successfully purchased ✅", route);
+      getCourseDetails();
+    }
+  }, [isPurchased]);
 
   const goToApplications = () => {
     router.push("/application");
+  };
+  const goToPaymentScreen = (url) => {
+    router.push(
+      {
+        pathname: "/paymentScreen",
+        params: { paymentUrl: url, courseId: courseId }
+      }
+    );
   };
 
   const successModal = (
@@ -203,6 +294,76 @@ function BuyCourses() {
     </Modal>
   );
 
+    const openBrowser = async (url) => {
+    const supported = await Linking.canOpenURL(url);
+
+    if (supported) {
+      await Linking.openURL(url); // opens in default browser
+    } else {
+      console.log("Can't open this URL:", url);
+    }
+  };
+
+   const swipeRef = useRef(null);
+
+     const [showButton, setShowButton] = useState(true);
+
+  const handleBuyCourse = async () => {
+    //  goToPaymentScreen(`https://www.godigiinfotech.com/my-course-details/${courseId}`)
+    //  goToPaymentScreen(`https://www.godigiinfotech.com/login`)
+   
+     setShowButton(false);
+    setTimeout(() => setShowButton(true), 100);
+
+    try {
+      setBuying(true)
+      const userTok = await AsyncStorage.getItem("logged_in_user_token");
+      const formdata = new FormData();
+      formdata.append("token", userTok);
+      formdata.append("order_reference_type", "course");
+      formdata.append("course_id", courseId);
+      formdata.append("order_from", "android");
+      console.log(formdata)
+      const response = await apiInstance.post(`course/generate-payment-url/${courseId}`, formdata, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      console.log(response.data)
+      if (response.data.status) {
+        // goToPaymentScreen(response.data)
+        // goToUrl(response.data.payUrl)
+         openBrowser(response.data.data.payment_url);
+      }
+      // goToPaymentScreen("https://www.godigiinfotech.com/transaction-success-app")
+    } catch (error) {
+      console.log(error)
+    }
+    finally {
+      setBuying(false);
+    }
+  }
+
+//   const handleBuyCourse = () => {
+//   const url = "exp://192.168.1.17:8082/--/(main)/(tabs)/profile";
+//   Linking.openURL(url).catch(err => 
+//     console.error("Failed to open URL:", err)
+//   );
+// };
+
+    const goToUrl = async (url) => {
+      try {
+        const supported = await Linking.canOpenURL(`${url}`);
+  
+        if (supported) {
+          // await Linking.openURL(`https://${url}`);
+          await Linking.openURL(`${url}`);
+        } else {
+          Alert.alert("Error", `Can't open this URL: ${url}`);
+        }
+      } catch (error) {
+        console.error("Failed to open URL:", error);
+      }
+    };
+
   const errorModal = (
     <Modal
       visible={isErrorModalOpen}
@@ -232,138 +393,144 @@ function BuyCourses() {
     </Modal>
   );
 
-  const courseContent = [
-    { id: "1", name: "Introduction to React Native & Environment Setup" },
-    { id: "2", name: "Understanding Components, JSX, and Props" },
-    { id: "3", name: "State Management & Hooks (useState, useEffect)" },
-    { id: "4", name: "Handling User Input & Forms" },
-    { id: "5", name: "Navigation (Stack, Tab, Drawer) using React Navigation" },
-    { id: "6", name: "Fetching Data from APIs (Axios / Fetch)" },
-    { id: "7", name: "Managing Global State with Redux or Context API" },
-    { id: "8", name: "Styling with Flexbox, Stylesheet, and Tailwind CSS" },
-    { id: "9", name: "Working with Images, Icons, and SVGs" },
-    { id: "10", name: "Using Device Features (Camera, Location, Sensors)" },
-    { id: "11", name: "Push Notifications (Firebase Cloud Messaging)" },
-    { id: "12", name: "Offline Storage (AsyncStorage, SQLite)" },
-    { id: "13", name: "Animations & Gesture Handling" },
-    { id: "14", name: "Building & Testing with Expo and Bare Workflow" },
-    {
-      id: "15",
-      name: "Publishing Apps to Google Play Store & Apple App Store",
-    },
-  ];
 
 
 
-  
-   const renderNote = ({ item }) => {
-     let newUrl = `https://godigiinfotech.com/${item.url}`;
-     return (
-       <TouchableOpacity style={styles.noteCard}  onPress={() =>
-             navigation.navigate("PDFViewerScreen", {
-               subjectId: item.id,
-             })
-           }>
-          <View
-           style={styles.noteInfo}
-          
-         >
-           {/* Show image instead of MaterialCommunityIcons */}
-           <Image
-             source={{ uri: newUrl }}
-             style={{ height: 40, width: 50, objectFit: "contain" }}
-           />
-           {/* <SvgUri width="40" height="40" uri={newUrl} /> */}
-           {/* <SvgUri
+  const renderNote = ({ item }) => {
+    let newUrl = `https://godigiinfotech.com/${item.url}`;
+    return (
+      <TouchableOpacity style={styles.noteCard} onPress={() =>
+        navigation.navigate("PDFViewerScreen", {
+          subjectId: item.id,
+        })
+      }>
+        <View
+          style={styles.noteInfo}
+
+        >
+          {/* Show image instead of MaterialCommunityIcons */}
+          <Image
+            source={{ uri: newUrl }}
+            style={{ height: 40, width: 50 }}
+             contentFit="fill"
+             transition={1000}
+          />
+          {/* <SvgUri width="40" height="40" uri={newUrl} /> */}
+          {/* <SvgUri
              uri="https://godigiinfotech.com/assets/images/subject_icons/3fbf008c016fc2ed8e85ce7199675c68.svg"
              width={50}
              height={40}
            /> */}
-           <Text style={styles.noteTitle}>{item.subject_name}</Text>
-         </View>
-   
-         {/* Actions with icons only (no functionality) */}
-         {/* <View style={styles.actions}>
-           <Feather name="download" size={24} color="#4CAF50" />
-           <Feather name="share-2" size={24} color="#2196F3" />
-         </View> */}
-       </TouchableOpacity>
-     );
-   
-    };
+          <Text style={styles.noteTitle}>{item.subject_name}</Text>
+        </View>
+
+        <View style={{backgroundColor:"green",borderRadius:5,paddingHorizontal:5,paddingVertical:1}}>
+       
+               <Text style={{color:"white",fontSize:10,fontWeight:600}}>Free Access</Text>
+               </View>
+      </TouchableOpacity>
+    );
+
+  };
 
 
-     const goToInterviewQuestionsDetails = (id) => {
+  const goToInterviewQuestionsDetails = (id) => {
     router.push({
       pathname: "/interviewQuestionsDetails",
       params: { id: id }, // pass the param here
     });
   };
 
-   const renderItemInterviewQuestions = ({ item }) => {
-     let newUrl = `https://godigiinfotech.com/${item.url}`;
-     return (
-       <TouchableOpacity style={styles.noteCard} onPress={() =>
-           goToInterviewQuestionsDetails(item.id)
-           }>
-         <View
-           style={styles.noteInfo}
-           
-         >
-           {/* Show image instead of MaterialCommunityIcons */}
-           <Image
-             source={{ uri: newUrl }}
-             style={{ height: 40, width: 50, objectFit: "contain" }}
-           />
-           {/* <SvgUri width="40" height="40" uri={newUrl} /> */}
-           {/* <SvgUri
+  const renderItemInterviewQuestions = ({ item }) => {
+    let newUrl = `https://godigiinfotech.com/${item.url}`;
+    return (
+      <TouchableOpacity style={styles.noteCard} onPress={() =>
+        goToInterviewQuestionsDetails(item.id)
+      }>
+        <View
+          style={styles.noteInfo}
+
+        >
+          {/* Show image instead of MaterialCommunityIcons */}
+          <Image
+            source={{ uri: newUrl }}
+            style={{ height: 40, width: 50 }}
+             contentFit="fill"
+             transition={1000}
+          />
+          {/* <SvgUri width="40" height="40" uri={newUrl} /> */}
+          {/* <SvgUri
              uri="https://godigiinfotech.com/assets/images/subject_icons/3fbf008c016fc2ed8e85ce7199675c68.svg"
              width={50}
              height={40}
            /> */}
-           <Text style={styles.noteTitle}>{item.subject_name}</Text>
-         </View>
-   
-         {/* Actions with icons only (no functionality) */}
-         {/* <View style={styles.actions}>
+          <Text style={styles.noteTitle}>{item.subject_name}</Text>
+        </View>
+
+       <View style={{backgroundColor:"green",borderRadius:5,paddingHorizontal:5,paddingVertical:1}}>
+       
+               <Text style={{color:"white",fontSize:10,fontWeight:600}}>Free Access</Text>
+               </View>
+
+        {/* Actions with icons only (no functionality) */}
+        {/* <View style={styles.actions}>
            <Feather name="download" size={24} color="#4CAF50" />
            <Feather name="share-2" size={24} color="#2196F3" />
          </View> */}
-       </TouchableOpacity>
-     );
-   };
+      </TouchableOpacity>
+    );
+  };
 
-   const addCourseView = async () => {
-          try {
-            let formData = new FormData();
-            const token = await AsyncStorage.getItem("logged_in_user_token");
-            formData.append("token", token);
-     
-            console.log(formData);
-            const response = await apiInstance.post(
-              `update-counts/3/${courseId}`,
-              formData,
-              {
-                headers: { "Content-Type": "multipart/form-data" },
-              }
-            );
-     
-            console.log("response of view api data", response.data);
-          } catch (error) {
-            console.log("this is err ", error);
-          }
-        };
-  
+  const addCourseView = async () => {
+    try {
+      let formData = new FormData();
+      const token = await AsyncStorage.getItem("logged_in_user_token");
+      formData.append("token", token);
+
+      console.log(formData);
+      const response = await apiInstance.post(
+        `update-counts/3/${courseId}`,
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+
+      // console.log("response of view api data", response.data);
+    } catch (error) {
+      console.log("this is err ", error);
+    }
+  };
 
 
-   const [scrolledHeight, setScrolledHeight] = useState(0);
-   const handleScroll=(e)=>{
-      const scrollY = e.nativeEvent.contentOffset.y;
+
+  const [scrolledHeight, setScrolledHeight] = useState(0);
+  const handleScroll = (e) => {
+    const scrollY = e.nativeEvent.contentOffset.y;
     setScrolledHeight(scrollY)
-   }
+  }
 
 
-   const htmlContentDesc = `
+
+  const htmlContentDesc = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+        <style>
+          body {
+            font-family: -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-size: 14px;
+            color: #333;
+            padding: 0;
+          }
+        </style>
+      </head>
+      <body>${courseDetails?.app_description || "Description not provided"}</body>
+    </html>
+  `;
+  const htmlContentFAQ = `
     <!DOCTYPE html>
     <html>
       <head>
@@ -382,145 +549,194 @@ function BuyCourses() {
     </html>
   `;
 
+  const goToNotifications = () => {
+    router.push("/notifications")
+  }
+
+  useEffect(()=>{
+      console.log("this is course image",courseImage)
+  },[courseImage])
+
   return (
     <>
-      {scrolledHeight < 25 ? (
+      {/* {scrolledHeight < 25 ? (
         <StatusBar barStyle={"light-content"} />
       ) : (
         <StatusBar hidden={true} translucent backgroundColor="transparent" />
-      )}
+      )} */}
       {
         loading
-        ?
-        <ActivityIndicator style={{marginTop:50}}/>
-        :
-      <View style={{ flex: 1 }}>
-        <Animated.ScrollView
-          onScroll={(e) => handleScroll(e)}
-          scrollEventThrottle={16}
-          entering={FadeInDown.duration(500).delay(200)}
-          style={styles.bgMain}
-          contentContainerStyle={{ paddingBottom: 80 }}
-        >
-          <ImageBackground
-            resizeMode="cover"
-            source={{
-              uri: `https://godigiinfotech.com/${courseDetails?.url}`,
-            }}
-            style={styles.upperPart}
-          >
-            <BlurView intensity={120} tint="dark" style={{ height: "100%" }}>
+          ?
+          <ActivityIndicator style={{ marginTop: 50 }} />
+          :
+          <View style={{ flex: 1 }}>
+           
               <View style={styles.topPart}>
-                <View style={styles.leftside}>
-                  <AntDesign
-                    name="left"
-                    size={22}
-                    color="#fff"
-                    onPress={goBack}
-                  />
-                </View>
-                <View style={styles.rightside}>
-                  <FontAwesome name="bookmark" size={24} color="#fff" />
-                  {/* <Entypo name="share" size={24} color="#fff" /> */}
+              <Feather name="arrow-left" size={24}
+                  color="#fff"
+                  onPress={goBack}
+                />
+                <Text style={styles.pageName}>Course Details</Text>
+                <View>
+                  {/* <Fontisto name="bell" size={22} color="#fff" onPress={goToNotifications} /> */}
                 </View>
               </View>
-              <View style={styles.topBased}>
-                <View style={styles.imageBg}>
-                  <Image
-                    source={ImagesPath.reactLogo}
-                    style={{ width: 60, height: 60, objectFit: "cover" }}
-                  />
+              
+            <Animated.ScrollView
+              onScroll={(e) => handleScroll(e)}
+              scrollEventThrottle={16}
+              entering={FadeInDown.duration(500).delay(200)}
+              style={styles.bgMain}
+              contentContainerStyle={{ paddingBottom: 80 }}
+            >
+             
+               <View style={styles.topBased}>
+                <View style={{backgroundColor:'#fff',height:200,width:"100%"}}>
+                {
+                  courseDetails.url == null
+                    ?
+                    <Image
+                      source={ImagesPath.cDummy}
+                      style={{ width: "100%", height: "200", borderRadius: 10 }}
+                       contentFit="fill"
+             transition={1000}
+                    />
+                    :
+                    <Image
+                      source={{ uri: courseImage }}
+                      style={{ width: "100%", height: "200", borderRadius: 10 }}
+                       contentFit="fill"
+             transition={1000}
+                    />
+
+                }
                 </View>
-                <View>
+                <View style={[styles.priceView,{position:'absolute',top:180,width:'95%',left:20}]}>
+                  <View style={styles.timeCont}>
+                    <FontAwesome name="clock-o" size={16} color={Colors.bg} />
+                    <Text style={styles.levelText}>{"60 hrs" || "NA"}</Text>
+                  </View>
+                   <Text style={styles.lessText}>({courseDetails?.chapter_count || "NA"} lessons)</Text>
+
+                </View>
+                <View style={styles.priceView}>
+                  <View style={{ flexDirection: "row", gap: 1 }}>
+                    <Feather name="bar-chart" size={18} color={Colors.bg} />
+                    <Text style={styles.levelText}>{courseDetails?.level || "Basic"} Level</Text>
+                  </View>
+                  <View style={{ flexDirection: "row", marginTop: 5, gap: 20 }}>
+                    <View
+                      style={{
+                        justifyContent: "center",
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 3,
+                      }}
+                    >
+                      <FontAwesome name="rupee" size={18} color={"#000"} />
+                      <Text style={styles.coursePrice}>{Number(courseDetails.price?.split(".")[0]).toLocaleString()}</Text>
+                    </View>
+                   <View
+                                     style={{
+                                       justifyContent: "center",
+                                       flexDirection: "row",
+                                       alignItems: "center",
+                                       width:60,
+                                     }}
+                                   >
+                                     <FontAwesome name="rupee" size={12} color={"#929090ff"} />
+                                     <Text style={styles.mrpName}>{courseDetails?.mrp?.split(".")[0] || "NA"}</Text>
+                                     <View style={styles.lineThrough}></View>
+                                   </View>
+                  </View>
+
+                </View>
+                <View style={styles.priceView}>
                   <Text style={styles.roleText}>{courseDetails?.title}</Text>
-                  <View style={styles.compBased}>
-                    <Text style={styles.compText}>Mobile Development</Text>
+                </View>
+                <View style={styles.dottedLine}></View>
+                <View>
+                  <View style={styles.typeView}>
+                    {["Online", "Projects", courseDetails?.language].map((i, index) => {
+                      // Return the Text component for each job type
+                      return (
+                        <View style={styles.type}>
+                        <Text style={styles.typeText} key={index}>
+                          {i}
+                        </Text>
+                        </View>  
+                      );
+                    })}
                   </View>
                 </View>
-              </View>
-              <View style={styles.dottedLine}></View>
-              <View style={styles.typeView}>
-                {type.map((i, index) => {
-                  // Return the Text component for each job type
-                  return (
-                    <Text style={styles.type} key={index}>
-                      {i}
-                    </Text>
-                  );
-                })}
-              </View>
-              <View style={styles.detailsCol}>
-                {/* <View style={styles.dataRow}>
-                <FontAwesome name="users" size={20} color="white" />
-                <Text style={styles.dataText}>2,456 enrolled</Text>
-              </View> */}
-                <View style={styles.dataRow}>
-                  <MaterialIcons name="language" size={24} color="white" />
-                  <Text style={styles.dataText}>{courseDetails?.language || "English"}</Text>
+                <View>
                 </View>
-                <View style={styles.dataRow}>
-                  <Text style={styles.btmrpText}>MRP</Text>
-                  <Text style={[styles.btmrpTextPrice]}>{courseDetails?.mrp || "na"}</Text>
-                  <View style={styles.lineThrough}></View>
-                </View>
-                <View style={styles.dataRow}>
-                  <FontAwesome
-                    name="rupee"
-                    size={24}
-                    color="white"
-                    style={{ paddingLeft: 5 }}
-                  />
-                  {/* <Text style={[styles.btmrpTextPrice]}>{8999}</Text>
-                <View style={styles.lineThrough}></View> */}
-                  <Text style={styles.dataText}>{courseDetails?.price}</Text>
-                </View>
+
+
               </View>
-              {/* <View style={{ paddingHorizontal: 20 }}>
-              <Pressable
-                style={{
-                  backgroundColor: "white",
-                  padding: 10,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  borderRadius: 10,
-                }}
-              >
-                <Text style={{ fontSize: 14, fontWeight: 700 }}>Purchase</Text>
-              </Pressable>
-            </View> */}
-            </BlurView>
-          </ImageBackground>
-          <View style={{ height: 50 }}>
-            <FlatList
-              contentContainerStyle={{
-                justifyContent: "space-evenly",
-                // width: "100%",
-              }}
-              horizontal
-              data={jobArray}
-              renderItem={renderJobItem}
-              keyExtractor={(item) => item.id.toString()}
-              showsHorizontalScrollIndicator={false}
-              style={styles.jobCategoryBar}
-            />
-          </View>
-          {selectedInfo == "Overview" && (
-            <View style={styles.info}>
-              <View style={styles.jd}>
-                <Text style={styles.subHead}>About Course</Text>
-                <AutoHeightWebView
-                                   customStyle={`
+              <View style={{ height: 50, marginHorizontal: 20 }}>
+                <FlatList
+                  contentContainerStyle={{
+                    justifyContent: "space-evenly",
+                  }}
+                  horizontal
+                  data={jobArray}
+                  renderItem={renderJobItem}
+                  keyExtractor={(item) => item.id.toString()}
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.jobCategoryBar}
+                />
+              </View>
+              
+              {selectedInfo == "Overview" && (
+                <View style={styles.info}>
+                  <View style={styles.jd}>
+                    {/* <Text style={styles.subHead}>About Course</Text> */}
+                    <AutoHeightWebView
+                      customStyle={`
                                             * {font-family: -apple-system, Roboto, Arial; font-size:14px; color:#333;}
-                                            body {marginTop:20; padding:0;}
+                                            body {marginTop:0; padding:0;}
                                           `}
-                                   source={{ html: htmlContentDesc }}
-                                   startInLoadingState
-                                   viewportContent={"width=device-width, user-scalable=no"}
-                                   scrollEnabled={false}
-                                   style={{ width: "100%", marginTop: 20 }}
-                                 />
-              </View>
-              {/* <View style={styles.topRev}>
+                      source={{ html: htmlContentDesc }}
+                      startInLoadingState
+                      viewportContent={"width=device-width, user-scalable=no"}
+                      scrollEnabled={false}
+                      style={{ width: "100%", }}
+                    />
+                  </View>
+                  <View style={[styles.jd, { marginVertical: 30 }]}>
+                    <Text style={{ fontSize: 14, fontWeight: 600, color: 'black' }}>Skills you will learn?</Text>
+                    <FlatList
+                      data={courseNotes}
+                      renderItem={renderSkills}
+                      numColumns={3}
+                      keyExtractor={(item) => item.id}
+                      columnWrapperStyle={{ flexWrap: 'wrap' }}
+                      contentContainerStyle={styles.listContainer}
+                      ListEmptyComponent={() => {
+                        return (
+                          <View
+                            style={{
+                              justifyContent: "center",
+                              padding: 10,
+                              marginTop: 50
+                            }}
+                          >
+                            <Text
+                              style={{
+                                color: "gray",
+                                fontWeight: 600,
+                                textAlign: "center",
+                              }}
+                            >
+                              No skills added for this course yet!
+                            </Text>
+                          </View>
+                        );
+                      }}
+                    />
+                  </View>
+                  {/* <View style={styles.topRev}>
                 <View style={styles.leftPart}>
                   <View style={styles.ratingNum}>
                     <Text style={styles.ratNum}>4.5</Text>
@@ -566,136 +782,196 @@ function BuyCourses() {
                   </View>
                 </View>
               </View> */}
-            </View>
-          )}
+                </View>
+              )}
 
-          {selectedInfo == "Course Content" && (
-            <View>
-              <View style={styles.jd}>
-                <Text style={styles.subHead}>What will this Course have?</Text>
-                <FlatList
-                  data={courseContent}
-                  keyExtractor={(item) => item.id}
-                  renderItem={({ item }) => (
+              {selectedInfo == "FAQ's" && (
+                <View>
+                  <View style={styles.jd}>
+                    <FlatList
+                      data={faqs}
+                      keyExtractor={(item) => item.id}
+                      renderItem={renderFaq}
+                      style={{ marginTop: 10 }}
+                      showsVerticalScrollIndicator={false}
+                      contentContainerStyle={{ padding: 5 }}
+                      ListEmptyComponent={() => {
+                        return (
+                          <View
+                            style={{
+                              justifyContent: "center",
+                              padding: 10,
+                              marginTop: 50
+                            }}
+                          >
+                            <Text
+                              style={{
+                                color: "gray",
+                                fontWeight: 600,
+                                textAlign: "center",
+                              }}
+                            >
+                              No FAQ's yet!
+                            </Text>
+                          </View>
+                        );
+                      }}
+                    />
+                  </View>
+
+                </View>
+              )}
+
+
+              {selectedInfo == "Notes" && (
+                <View style={styles.jd}>
+                  <FlatList
+                    data={courseNotes}
+                    style={{ maxHeight: 450 }}
+                    keyExtractor={(item) => item.id}
+                    renderItem={renderNote}
+                    nestedScrollEnabled={true}
+                    contentContainerStyle={{ padding: 16 }}
+                    ListEmptyComponent={() => {
+                      return (
+                        <View
+                          style={{
+                            justifyContent: "center",
+                            padding: 10,
+                            marginTop: 50
+                          }}
+                        >
+                          <Text
+                            style={{
+                              color: "gray",
+                              fontWeight: 600,
+                              textAlign: "center",
+                            }}
+                          >
+                            No Notes added for this course yet!
+                          </Text>
+                        </View>
+                      );
+                    }}
+                  />
+                </View>
+              )}
+              {selectedInfo == "Interview Questions" && (
+                <View style={styles.jd}>
+                  <FlatList
+                    data={courseNotes}
+                    keyExtractor={(item) => item.id}
+                    style={{ maxHeight: 450 }}
+                    nestedScrollEnabled={true}
+                    renderItem={renderItemInterviewQuestions}
+                    contentContainerStyle={{ padding: 16 }}
+                    ListEmptyComponent={() => {
+                      return (
+                        <View
+                          style={{
+                            justifyContent: "center",
+                            padding: 10,
+                            marginTop: 50
+                          }}
+                        >
+                          <Text
+                            style={{
+                              color: "gray",
+                              fontWeight: 600,
+                              textAlign: "center",
+                            }}
+                          >
+                            No Interview Questions  added for this course yet!
+                          </Text>
+                        </View>
+                      );
+                    }}
+                  />
+                </View>
+              )}
+              {selectedInfo == "Certificate" && (
+                <View style={styles.jd}>
+                  <Text style={styles.certHead}><FontAwesome5 name="graduation-cap" size={20} color="black" /> Certificate of Completion</Text>
+                  <Text style={styles.subHead}>Upon successfully finishing the {courseDetails?.title || "this"} course, you’ll receive an industry-recognized Certificate of Completion - a testament to your newly acquired skills and dedication.</Text>
+
+
+                  <Image
+                    source={ImagesPath.certificate}
+                    style={{
+                      height: 200,
+                      marginTop: 30,
+                      width: "100%",
+                    }}
+                     contentFit="fill"
+             transition={1000}
+                  />
+                  <View style={{ marginTop: 10 }}>
+                    <Text style={styles.certHeading}>This certificate can be:</Text>
                     <View style={styles.item}>
                       <Text style={styles.bulletContent}>{"\u2022"}</Text>
-                      <Text style={styles.text}>{item.name}</Text>
+                      <Text style={styles.text}>Shared on LinkedIn to boost your professional profile</Text>
                     </View>
-                  )}
-                  style={{ marginTop: 10 }}
-                  showsVerticalScrollIndicator={false}
-                />
-              </View>
-              <View style={styles.jd}>
-                <Text style={styles.subHead}>What you will learn?</Text>
-                <FlatList
-                  data={requiredSkills}
-                  renderItem={renderSkills}
-                  numColumns={3}
-                  keyExtractor={(item) => item.id}
-                  contentContainerStyle={styles.listContainer}
-                />
-              </View>
-            </View>
-          )}
-          {selectedInfo == "Notes" && (
-            <View style={styles.jd}>
-              <Text style={styles.subHead}>Notes</Text>
-              <FlatList
-                data={courseNotes}
-                style={{maxHeight:320}}
-                keyExtractor={(item) => item.id}
-                renderItem={renderNote}
-                nestedScrollEnabled={true}
-                contentContainerStyle={{ padding: 16 }}
-                ListEmptyComponent={() => {
-                                          return (
-                                            <View
-                                              style={{
-                                                justifyContent: "center",
-                                                padding: 10,
-                                                marginTop:50
-                                              }}
-                                            >
-                                              <Text
-                                                style={{
-                                                  color: "gray",
-                                                  fontWeight: 600,
-                                                  textAlign: "center",
-                                                }}
-                                              >
-                                                No Notes found!
-                                              </Text>
-                                            </View>
-                                          );
-                                        }}
-              />
-            </View>
-          )}
-          {selectedInfo == "Interview Questions" && (
-            <View style={styles.jd}>
-              <Text style={styles.subHead}>Interview Questions</Text>
-              <FlatList
-                data={courseNotes}
-                keyExtractor={(item) => item.id}
-                style={{maxHeight:320}}
-                nestedScrollEnabled={true}
-                renderItem={renderItemInterviewQuestions}
-                contentContainerStyle={{ paddingTop: 20 }}
-                ListEmptyComponent={() => {
-                                          return (
-                                            <View
-                                              style={{
-                                                justifyContent: "center",
-                                                padding: 10,
-                                                marginTop:50
-                                              }}
-                                            >
-                                              <Text
-                                                style={{
-                                                  color: "gray",
-                                                  fontWeight: 600,
-                                                  textAlign: "center",
-                                                }}
-                                              >
-                                                No Interview Questions found!
-                                              </Text>
-                                            </View>
-                                          );
-                                        }}
-              />
-            </View>
-          )}
-          {selectedInfo == "Certificate" && (
-            <View style={styles.jd}>
-              <Text style={styles.subHead}>Certificate</Text>
-              <Image
-                source={ImagesPath.certificate}
-                style={{
-                  height: 200,
-                  objectFit: "contain",
-                  marginTop: 30,
-                  width: "100%",
-                }}
-              />
-            </View>
-          )}
+                    <View style={styles.item}>
+                      <Text style={styles.bulletContent}>{"\u2022"}</Text>
+                      <Text style={styles.text}>Added to your resume or portfolio to showcase your expertise
+                      </Text>
+                    </View>
+                    <View style={styles.item}>
+                      <Text style={styles.bulletContent}>{"\u2022"}</Text>
+                      <Text style={styles.text}>Used to demonstrate your readiness for developer roles, freelance gigs, or startup projects
+                      </Text>
+                    </View>
+                    <Text style={styles.subHead}>Designed to reflect your achievement and the comprehensive knowledge you’ve gained, this certificate is more than just a document - it’s your <Text style={{ fontWeight: 600, fontSize: 14, color: 'black' }}>launchpad into the tech world</Text>.</Text>
+                  </View>
+                </View>
+              )}
 
-          {/* <View style={styles.jd}>
+              {/* <View style={styles.jd}>
         <Text style={styles.subHead}>Company Info.</Text>
         <Text style={styles.subHeadText}>
           809, Godrej and Boyce compound , Vikhroli, Mumbai, 444 301.
         </Text>
       </View> */}
 
-          {successModal}
-          {errorModal}
-        </Animated.ScrollView>
-        <View style={styles.buttonContainer}>
-          <ThemeBtn btnTitle={"Buy Now"} />
-        </View>
-      </View>
+              {successModal}
+              {errorModal}
+            </Animated.ScrollView>
+            {
+              !isCoursePurchased && showButton &&
+            <View style={styles.buttonContainer}>
+                <SwipeButton
+                  ref={swipeRef}  
+                  containerStyles={{
+                    borderRadius: 30,
+                    overflow: "hidden",
+                    borderWidth: 0,          // ✅ removes container border
+                  }}
+                  railBackgroundColor={Colors.bg}  // 👈 show gradient instead of rail
+                  railFillBackgroundColor={"#fff"}       // 👈 red fill when swiped
+                  title="Swipe to Buy Course"
+                  titleColor="#fff"
+                  titleFontSize={16}
+                  onSwipeSuccess={handleBuyCourse}
+                  enableReverseSwipe={false}
+                  // onSwipeStart={}
+                  titleStyles={{ fontSize: 16, fontWeight: 500 }}
+                  railBorderColor={"red"}
+
+                  railFillBorderColor={Colors.bg}
+                  thumbIconBackgroundColor="#fff"
+                  thumbIconComponent={() => (
+                    <AntDesign name="double-right" size={24} color={Colors.bg}/>
+                  )}
+                />
+
+            </View> 
+            }
+              {/* <ThemeBtn btnTitle={"Buy Now"} onPress={handleBuyCourse} loadingBtn={buying}/> */}
+          </View>
       }
+     <TouchableOpacity onPress={goToChatScreen} style={{ position: 'absolute', bottom: !isCoursePurchased && showButton ? 80 :20, right: 20, backgroundColor: Colors.bg, padding: 15, borderRadius: 40 }}>
+             <Entypo name="chat" size={24} color={"#fff"} />
+           </TouchableOpacity>
     </>
   );
 }
@@ -711,7 +987,8 @@ const styles = StyleSheet.create({
     bottom: 0,
     width: "100%",
     paddingHorizontal: 20,
-    paddingBottom: 10,
+    paddingTop: 5,
+    paddingBottom: 15,
   },
   noteCard: {
     backgroundColor: "#fff",
@@ -722,7 +999,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     elevation: 3,
-    shadowColor: "gray",
+    shadowColor: "lightgray",
     shadowOpacity: 1,
     shadowRadius: 5,
     shadowOffset: { width: 0, height: 2 },
@@ -731,6 +1008,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
+    width:'60%'
   },
   actions: {
     flexDirection: "row",
@@ -739,7 +1017,8 @@ const styles = StyleSheet.create({
   noteTitle: {
     fontSize: 16,
     fontWeight: "600",
-    width:"80%"
+    width: "80%",
+    color: "black"
   },
   topRev: {
     // backgroundColor: "red",
@@ -839,7 +1118,7 @@ const styles = StyleSheet.create({
   },
   dataText: {
     color: "white",
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: 600,
   },
   btmrpTextPrice: {
@@ -853,19 +1132,24 @@ const styles = StyleSheet.create({
     fontWeight: 600,
   },
   lineThrough: {
-    width: 40,
+    width: 50,
     height: 2,
-    backgroundColor: "#b5b0b0fc",
+    backgroundColor: "#AEAEAE",
     position: "absolute",
-    transform: [{ rotate: "-20deg" }],
-    left: 35,
-    bottom: 8,
+    // transform: [{ rotate: "-20deg" }],
+    left: -5,
+    bottom: 12,
+  },
+  mrpName: {
+    fontSize: 12,
+    color: "#AEAEAE",
+    textAlign:'center'
   },
   detailsCol: {
-    flexDirection: "column",
-    alignItems: "flex-start",
+    flexDirection: "row",
+    alignItems: "center",
     padding: 20,
-    gap: 10,
+    gap: 40,
   },
   rightRow: {
     width: "50%",
@@ -938,14 +1222,35 @@ const styles = StyleSheet.create({
   },
   skillContainer: {
     margin: 10,
+    // backgroundColor:'red',
+    paddingHorizontal:5,
+    paddingVertical:3,
+    borderRadius:20,
+    borderWidth:2,
+    borderColor:Colors.bg
+  },
+  borderView: {
+    backgroundColor: "red",
+    height: 1,
+  },
+  faqView: {
+    backgroundColor: "white",
+    borderRadius: 5,
+    marginVertical: 5,
+    padding: 10,
+    shadowColor: "black",
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: 2,
+    shadowOpacity: 0.12,
+    elevation: 2,
   },
   skillText: {
     paddingVertical: 5,
     paddingHorizontal: 10,
     borderRadius: 25,
-    borderColor: "#0069CB",
+    // borderColor: "#0069CB",
     color: "#0069CB",
-    borderWidth: 2,
+    // borderWidth: 2,
   },
   itemContainer: {
     marginVertical: 2,
@@ -983,24 +1288,28 @@ const styles = StyleSheet.create({
     fontSize: 16,
     margin: 10,
     marginTop: 5,
-    textAlign:"justify"
+    textAlign: "justify"
   },
   subHead: {
     color: "#000",
-    fontWeight: "bold",
-    fontSize: 18,
+    fontSize: 14,
+    paddingVertical: 10
+  },
+  certHead: {
+    fontWeight: 600,
+    fontSize: 16
   },
   info: {
     paddingBottom: 20,
   },
   jd: {
     paddingHorizontal: 20,
-    marginVertical: 10,
+    marginVertical: -5,
   },
   jobCategoryItem: {
     borderBottomColor: "lightgrey",
     borderBottomWidth: 1.5,
-    paddingHorizontal: 20,
+    paddingHorizontal: 15,
     height: 40,
     // marginRight: 15,
     // paddingVertical: 5,
@@ -1041,20 +1350,22 @@ const styles = StyleSheet.create({
   typeView: {
     flexDirection: "row",
     gap: 10,
-    marginTop: 20,
-    marginBottom: 10,
     justifyContent: "space-evenly",
   },
   type: {
-    backgroundColor: "#fff",
+    backgroundColor: "#F2F4FA",
     padding: 5,
     paddingHorizontal: 15,
     borderRadius: 5,
-    fontSize: 14,
+    width: "25%",
+    textAlign: 'center',
+    justifyContent:'center',
+    alignItems:'center'
+  },
+  typeText:{
+     fontSize: 14,
     fontWeight: "semibold",
-    color: "grey",
-    borderWidth: 0.5,
-    borderColor: "grey",
+    color: "gray",
   },
   part1: {
     flexDirection: "row",
@@ -1075,18 +1386,37 @@ const styles = StyleSheet.create({
   },
   upperPart: {
     // backgroundColor: "#0069cb",
-    height: Platform.OS == "android" ? 380 : 450,
+    height: Platform.OS == "android" ? 320 : 320,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
     paddingTop: Platform.OS === "android" ? 0 : 40,
   },
-  topPart: {
+  // topPart: {
+  //   flexDirection: "row",
+  //   justifyContent: "space-between",
+  //   alignItems: "center",
+  //   paddingVertical: 20,
+  //   paddingHorizontal: 20,
+  //   paddingTop: Platform.OS == "android" ? 50 : 70,
+  //   backgroundColor: Colors.bg
+  // },
+    topPart: {
+    backgroundColor: Colors.bg,
+       height:100,
+    // backgroundColor: "red",
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-    paddingTop: Platform.OS == "android" ? 50 : 60,
+    paddingVertical: 10,
+    shadowColor: "lightgrey",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.85,
+    shadowRadius: 2,
+    elevation: 5,
+    borderBottomColor: "lightgrey",
+    borderBottomWidth: 0.5,
+    paddingTop: Platform.OS === "android" ? 50 : 70,
+    paddingHorizontal:20
   },
   leftside: {
     gap: 10,
@@ -1102,6 +1432,7 @@ const styles = StyleSheet.create({
   pageName: {
     fontSize: 20,
     fontWeight: "bold",
+    color: "#fff"
   },
   imageBg: {
     borderRadius: 3,
@@ -1109,18 +1440,60 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   topBased: {
+    backgroundColor: "#fff",
+    marginBottom: 10,
+    margin: 15,
+    borderRadius: 10,
+    padding: 10,
+    shadowColor: "black",
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: 2,
+    shadowOpacity: 0.12,
+    elevation: 2,
+  },
+  priceView: {
+    // backgroundColor:"yellow",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginVertical: 3,
+    alignItems: 'center'
+  },
+  timeCont: {
+    backgroundColor: "#fff",
+    // position: "absolute",
+    // top: 120,
+    // left: 10,
+    borderRadius: 5,
+    paddingHorizontal: 10,
     flexDirection: "row",
-    justifyContent: "flex-start",
-    gap: 20,
+    justifyContent: "center",
     alignItems: "center",
-    width: "80%",
-    paddingHorizontal: 20,
-    marginBottom: 30,
+    gap: 5,
+  },
+  coursePrice: {
+    fontSize: 15,
+    fontWeight: 800,
+    marginVertical: 3,
+    color: "#2C2C2C",
+  },
+  levelText: {
+    fontSize: 12,
+    fontWeight: 600,
+    marginVertical: 3,
+    // color: Colors.bg,
+    color: "gray",
+  },
+  lessText: {
+    fontSize: 12,
+    fontWeight: 600,
+    marginVertical: 3,
+    // color: Colors.bg,
+    color: "#fff",
   },
   roleText: {
     fontWeight: "600",
-    fontSize: 22,
-    color: "#fff",
+    fontSize: 18,
+    color: "#000",
     // backgroundColor:"red"
   },
   compText: {
@@ -1162,21 +1535,27 @@ const styles = StyleSheet.create({
   },
   dottedLine: {
     marginHorizontal: "auto",
-    width: "90%",
+    width: "100%",
     height: 0,
-    borderColor: "#fff",
+    borderColor: "#828282",
     borderStyle: "dashed",
-    borderWidth: 1.4,
+    borderWidth: 0.8,
+    marginVertical: 10
   },
   item: {
     flexDirection: "row",
     alignItems: "flex-start",
-    marginBottom: 8,
   },
   bulletContent: {
     fontSize: 18,
     marginRight: 8,
     color: "black",
+  },
+  certHeading: {
+    fontWeight: 600,
+    marginVertical: 5,
+    fontSize: 14,
+    color: "black"
   },
   text: {
     flex: 1,

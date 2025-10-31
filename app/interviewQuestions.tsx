@@ -1,4 +1,4 @@
-import { AntDesign } from "@expo/vector-icons";
+import { AntDesign, Entypo, Feather, Fontisto } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -10,54 +10,21 @@ import {
   StyleSheet,
   Platform,
   ActivityIndicator,
-  Image,
+  TextInput,
 } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/FontAwesome5";
 import apiInstance from "./interceptors";
+import { Colors } from "@/constants/Colors";
+import { Image } from 'expo-image';
 
-const interviewQuestions = [
-  {
-    id: "1",
-    title: "HTML & CSS",
-    icon: "html5",
-    questions: 25,
-    color: "#E44D26",
-  },
-  {
-    id: "2",
-    title: "JavaScript",
-    icon: "js",
-    questions: 40,
-    color: "#F7DF1E",
-  },
-  {
-    id: "3",
-    title: "React.js",
-    icon: "react",
-    questions: 35,
-    color: "#61DAFB",
-  },
-  {
-    id: "4",
-    title: "Node.js",
-    icon: "node-js",
-    questions: 20,
-    color: "#68A063",
-  },
-  {
-    id: "5",
-    title: "DevOps",
-    icon: "server",
-    questions: 18,
-    color: "#6C63FF",
-  },
-];
+
 
 export default function InterviewQuestionsList() {
 
     const [interviewQuestionsList, setInterviewQuestionsList] = useState([]);
+    const [allQuestions, setAllQuestions] = useState([]);
     const [loadingData, setLoadingData] = useState(false);
 
 
@@ -76,8 +43,9 @@ export default function InterviewQuestionsList() {
         }
       );
       if (response.data.status) {
-        console.log(response.data.data);
+        // console.log(response.data.data);
         setInterviewQuestionsList(response.data.data);
+        setAllQuestions(response.data.data);
       }
     } catch (error) {
       console.log(error);
@@ -109,14 +77,19 @@ const renderItem = ({ item }) => {
       <View style={[styles.iconContainer, { backgroundColor: item.color }]}>
         <Image
           source={{ uri: newUrl }}
-          style={{ height: 40, width: 50, objectFit: "contain" }}
+          style={{ height: 40, width: 50}}
+           contentFit="fill"
+             transition={1000}
         />
       </View>
       <View style={styles.textContainer}>
         <Text style={styles.title}>{item.subject_name}</Text>
-        <View style={{flexDirection:'row',justifyContent:"flex-start",alignItems:"center",gap:10}}>
-        <Text style={styles.count}>30 Questions</Text>
-          <Text style={{color:"white",paddingHorizontal:5,paddingVertical:1,borderRadius:5,fontSize:10,fontWeight:600,backgroundColor:"green"}}>Free</Text>
+        <View style={{flexDirection:'row',justifyContent:"flex-start",alignItems:"baseline",gap:10}}>
+        <Text style={styles.count}>{item.question_count} Questions</Text>
+          <View style={{backgroundColor:"green",borderRadius:5,paddingHorizontal:5,paddingVertical:1}}>
+         
+                 <Text style={{color:"white",fontSize:10,fontWeight:600}}>Free</Text>
+                 </View>
         </View>
       </View>
       <Icon name="chevron-right" size={18} color="#ccc" />
@@ -131,19 +104,85 @@ const renderItem = ({ item }) => {
       navigation.goBack();
     };
 
+
+  const goToNotifications=()=>{
+    router.push("/notifications")
+  }
+
+    const [searchQuery, setSearchQuery] = useState('');
+    const filterCourses = () => {
+  if (searchQuery.trim().length > 0) {
+    const filtered = allQuestions.filter(c =>
+      c.subject_name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    setInterviewQuestionsList(filtered);
+  } else {
+    setInterviewQuestionsList(allQuestions); // Reset to original list
+  }
+};
+
   return (
     <View style={styles.container}>
-      <View style={styles.topPart}>
-        <View style={styles.leftside}>
-          <AntDesign
-            name="arrowleft"
-            size={24}
-            color="black"
-            onPress={goBack}
-          />
+     <View style={styles.topPart}>
+         <Feather name="arrow-left" size={24} 
+                     color="#fff"
+                     onPress={goBack}
+                   />
           <Text style={styles.pageName}>Interview Questions</Text>
-        </View>
+          <View>
+            {/* <Fontisto name="bell" size={22} color="#fff" onPress={goToNotifications}/> */}
+          </View>
       </View>
+
+       <View style={styles.topPart1}>
+                      <View style={styles.inputBg}>
+                       
+                          <TextInput
+        placeholder="Search Interview Questions"
+        value={searchQuery}
+        onChangeText={(text) => setSearchQuery(text)}
+        placeholderTextColor="#929090ff"
+        autoComplete="off"
+        style={[
+          Colors.inputbox,
+          {
+            backgroundColor: "white",
+            borderColor: "#fff",
+            borderRadius: 10,
+            elevation: 2,
+            shadowColor: "lightgray",
+            shadowOffset: { width: 0, height: 0 },
+            shadowRadius: 5,
+            shadowOpacity: 0.8,
+            borderWidth: 0.5,
+            paddingLeft: 40,
+            borderColor: "#e2e2e2",
+          },
+        ]}
+        returnKeyType="search"   // Shows "Search" button on the keyboard
+        blurOnSubmit={false}     // Keeps input focused if you want
+        onSubmitEditing={() => {
+          // ✅ This will run when Enter/Search/Done is pressed
+          // console.log("Search submitted:", searchQuery);
+          filterCourses(); // <-- your method
+        }}
+      />
+      
+                           <Feather name="search" size={22} color="#929090ff" style={{position:"absolute",left:10}}/>
+                           {
+                            searchQuery.length > 0
+                            &&
+                           <Entypo name="cross" size={24} color="#929090ff" style={{position:"absolute",right:10}}  onPress={() => {
+      setSearchQuery("");
+      setInterviewQuestionsList(allQuestions); // Reset instantly
+    }}
+  />
+                           }
+                      </View>
+                      {/* <View style={styles.filterBg}>
+                        <Ionicons name="options-outline" size={24} color="#fff" />
+                      </View> */}
+                    </View>
       {loadingData ? (
         <ActivityIndicator style={{marginTop:50}}/>
       ) : (
@@ -153,7 +192,7 @@ const renderItem = ({ item }) => {
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
-          style={{ paddingTop: 20,}}
+          style={{ paddingTop: 10,}}
           contentContainerStyle={{paddingBottom:80}}
           ListEmptyComponent={() => {
             return (
@@ -185,14 +224,29 @@ const renderItem = ({ item }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fafafd",
+    backgroundColor: "#F2F2F2",
   },
-  topPart: {
-    backgroundColor: "#fff",
+  inputBg:{
+    justifyContent:'center',
+    alignItems:'center',
+    borderRadius:10,
+    width:'100%',
+    flexDirection:"row"
+  },
+  topPart1: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingTop:10
+  },
+   topPart: {
+    backgroundColor: Colors.bg,
+       height:100,
+    // backgroundColor: "red",
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 20,
+    paddingVertical: 10,
     shadowColor: "lightgrey",
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.85,
@@ -200,17 +254,19 @@ const styles = StyleSheet.create({
     elevation: 5,
     borderBottomColor: "lightgrey",
     borderBottomWidth: 0.5,
-    paddingTop: Platform.OS === "android" ? 50 : 50,
+    paddingTop: Platform.OS === "android" ? 50 : 70,
+    paddingHorizontal:20
   },
   leftside: {
     gap: 10,
     flexDirection: "row",
     alignItems: "center",
-    marginHorizontal: 20,
+    // marginHorizontal: 20,
   },
   pageName: {
     fontSize: 20,
     fontWeight: "bold",
+    color:"#fff"
   },
   header: {
     fontSize: 22,
@@ -225,12 +281,14 @@ const styles = StyleSheet.create({
     padding: 14,
     marginHorizontal: 20,
     borderRadius: 10,
-    marginBottom: 10,
-    elevation: 3,
-    shadowColor: "gray",
-    shadowOpacity: 1,
+    marginBottom: 5,
+  shadowColor: "lightgray",
+    shadowOffset: { width: 0, height: 0 },
     shadowRadius: 5,
-    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.8,
+    elevation: 2,
+    borderWidth: 0.5,
+    borderColor: "#e2e2e2",
   },
   iconContainer: {
     width: 50,
@@ -246,7 +304,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#333",
+    color: "#000",
   },
   count: {
     fontSize: 13,

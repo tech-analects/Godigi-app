@@ -8,10 +8,11 @@ import {
   TouchableOpacity,
   Image,
 } from "react-native";
-import { AntDesign } from "@expo/vector-icons";
+import { AntDesign, Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { ImagesPath } from "@/constants/ImagesPath";
 import Animated, { FadeInDown } from "react-native-reanimated";
+import { Colors } from "@/constants/Colors";
 
 function Notifications() {
   const navigation = useNavigation();
@@ -103,8 +104,13 @@ function Notifications() {
   return (
     <View style={styles.bgMain}>
       <View style={styles.topPart}>
-        <AntDesign name="arrowleft" size={24} color="black" onPress={goBack} />
-        <Text style={styles.pageName}>Notifications</Text>
+        <Feather name="arrow-left" size={24} 
+            color="#fff"
+            onPress={goBack}
+          />
+          <Text style={styles.pageName}>Notifications</Text>
+          <View>
+          </View>
       </View>
 
       {/* Today Notifications */}
@@ -140,18 +146,33 @@ const styles = StyleSheet.create({
   notiView: {
     width: "80%",
   },
-  topPart: {
-    backgroundColor: "#fff",
+    topPart: {
+    backgroundColor: Colors.bg,
+    // backgroundColor: "red",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 10,
+    shadowColor: "lightgrey",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.85,
+    shadowRadius: 2,
+    elevation: 5,
+    borderBottomColor: "lightgrey",
+    borderBottomWidth: 0.5,
+    paddingTop: Platform.OS === "android" ? 50 : 70,
+    paddingHorizontal:20
+  },
+  leftside: {
+    gap: 10,
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-    gap: 10,
-    paddingTop: Platform.OS === "android" ? 40 : 50,
+    marginHorizontal: 20,
   },
   pageName: {
     fontSize: 20,
     fontWeight: "bold",
+    color:"#fff"
   },
   sectionTitle: {
     paddingVertical: 10,

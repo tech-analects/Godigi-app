@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "978989280460",
+    "project_id": "godigi-infotech-bba2c",
+    "storage_bucket": "godigi-infotech-bba2c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:978989280460:android:30a8f32a2e1e6ac5bf6669",
+        "android_client_info": {
+          "package_name": "com.app.godigi_infotech"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDL1trBsf1yYuBocKgCm378Cra1lLjRBQo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

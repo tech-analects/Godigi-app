@@ -11,13 +11,12 @@ import {
 } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
   FlatList,
-  Image,
   Linking,
   Modal,
   Platform,
@@ -31,23 +30,16 @@ import {
 import apiInstance from "./interceptors";
 import AutoHeightWebView from "react-native-autoheight-webview";
 import { Colors } from "@/constants/Colors";
+import Toast from "react-native-toast-message";
+import * as Clipboard from 'expo-clipboard';
+import { Image } from 'expo-image';
 
 function ApplyJobs() {
   const navigation = useNavigation();
-  const [selectedInfo, setSelectedInfo] = useState("Job Description");
-  const goBack = () => {
-    navigation.goBack();
-  };
-
-  const route = useRoute();
-  let jobId = route.params?.id
-
-  const type = ["Full Time", "Remote", "Director"];
-
   const jobArray = [
     {
       id: 1,
-      name: "Job Description",
+      name: "Description",
     },
     {
       id: 2,
@@ -59,9 +51,23 @@ function ApplyJobs() {
     },
     {
       id: 4,
-      name: "More",
+      name: "About Company",
     },
   ];
+  const [selectedInfo, setSelectedInfo] = useState(jobArray[0]?.name);
+  const goBack = () => {
+    navigation.goBack();
+  };
+
+  const route = useRoute();
+  const local = useLocalSearchParams();
+  let jobId = route.params?.id || local.jobId
+  let profile = route.params?.prf || local.prf;
+  // console.log(jobId,profile,route,local)
+
+
+  const type = ["Full Time", "Remote", "Director"];
+
 
   const renderJobItem = ({ item }) => (
     <TouchableOpacity
@@ -77,7 +83,7 @@ function ApplyJobs() {
           selectedInfo === item.name && styles.selectedJobText,
         ]}
       >
-        {item.name}
+        {item.id == 1 ? `${profile} ${item.name}` : item.name}
       </Text>
     </TouchableOpacity>
   );
@@ -124,7 +130,10 @@ function ApplyJobs() {
   const [loadingApply,setLoadingApply] = useState(false);
   const [jobDetails, setJobDetails] = useState([]);
   const [isBookmarkAdded, setIsBookmarkAdded] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
   const [addingBookmark, setAddingBookmark] = useState(false);
+  const [jobIdBookmarking, setJobIdBookmarking] = useState(null);
+  
 
 
   const getJobDetails=async()=>{
@@ -134,7 +143,7 @@ function ApplyJobs() {
        const token = await AsyncStorage.getItem("logged_in_user_token");
        formData.append("token", token);
 
-       console.log(formData);
+      //  console.log(formData);
        const response = await apiInstance.post(
          `job-internship/details/${jobId}`,
          formData,
@@ -143,7 +152,7 @@ function ApplyJobs() {
          }
        );
        if(response.data.status){
-         console.log(response.data)
+        //  console.log(response.data)
         setJobDetails(response.data.data)
        }
     } catch (error) {
@@ -156,12 +165,35 @@ function ApplyJobs() {
 
   useEffect(()=>{
     if(jobId){
-      console.log("jobid id",jobId)
+      // console.log("jobid id",jobId)
       getJobDetails();
       addJobInternshipView();
     }
   },[])
 
+ const copyUrl = async (url) => {
+  try {
+    await Clipboard.setStringAsync(url);
+    setIsCopied(true)
+    showToast("The link has been copied to your clipboard.");
+  } catch (error) {
+    console.error("Error copying URL: ", error);
+  }
+};
+
+const handleCall = (mob) => {
+  if (!mob) {
+    Alert.alert("Invalid Number", "Phone number is missing");
+    return;
+  }
+
+  let phoneNumber = `tel:${mob}`;
+
+  Linking.openURL(phoneNumber).catch((err) => {
+    console.error("Error while trying to make a call: ", err);
+    Alert.alert("Error", "Unable to make a call right now.");
+  });
+};
 
    const addJobInternshipView = async () => {
        try {
@@ -169,7 +201,7 @@ function ApplyJobs() {
          const token = await AsyncStorage.getItem("logged_in_user_token");
          formData.append("token", token);
   
-         console.log(formData);
+        //  console.log(formData);
          const response = await apiInstance.post(
            `update-counts/0/${jobId}`,
            formData,
@@ -234,23 +266,15 @@ function ApplyJobs() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            {/* <View style={styles.modalImageContainer}>
-            <Image
-              source={ImagesPath.resetModalImg}
-              style={styles.modalImage}
-            />
-          </View>
-          <Text style={styles.modalTitle}>Successfull</Text>
-          <Text style={styles.modalText}>
-            You have successfully appiled to this Internship
-          </Text> */}
-            {/* <ThemeBtn
-            btnTitle={"Discover More Internships"}
-            onPress={goToApplications}
-          /> */}
+           
             <Text style={styles.contactHead}>Contact Details</Text>
+            <Text style={styles.contactHead2}>Below are the contact details of the respective hiring managers. You can reach out to them to schedule your interview.</Text>
             <View style={{marginVertical:30}}>
+              {
+                jobDetails?.hr_name
+                &&
               <View style={styles.duraView}>
+                <View style={{flexDirection:'row',alignItems:'center'}}>
                 <Text style={[styles.compText, { color: Colors.bg }]}>
                   HR Name :{" "}
                 </Text>
@@ -258,68 +282,65 @@ function ApplyJobs() {
                   {" "}
                   {jobDetails?.hr_name || "NA"}
                 </Text>
+                </View>  
               </View>
+              }
+              {
+                jobDetails?.company_phone
+                &&
               <View style={styles.duraView}>
+                <View style={{flexDirection:'row',alignItems:'center'}}>
                 <Text style={[styles.compText, { color: Colors.bg }]}>
                   Contact :{" "}
                 </Text>
                 <Text style={styles.compText2}>
                   {" "}
-                  {jobDetails?.contact_details || "NA"}
+                  {jobDetails?.company_phone || "NA"}
                 </Text>
+                </View>
+                <TouchableOpacity onPress={()=>handleCall(jobDetails?.company_phone)}>
+                  <Ionicons name="call" size={20} color={Colors.bg} />
+                </TouchableOpacity>
               </View>
+              }
+              {
+                jobDetails?.company_url
+                &&
               <View style={styles.duraView}>
+                <View style={{flexDirection:'row',alignItems:'center'}}>
                 <Text style={[styles.compText, { color: Colors.bg }]}>
-                  Company Site :{" "}
+                  Site :{" "}
                 </Text>
                 <Text style={styles.compText2}>
                   {" "}
                   {jobDetails?.company_url || "NA"}
                 </Text>
+                </View>  
+                <TouchableOpacity onPress={()=>copyUrl(jobDetails?.company_url)}>
+                  <Ionicons name={isCopied ? "copy" : "copy-outline"} size={20} color={Colors.bg} />
+                </TouchableOpacity>
               </View>
-            </View>
+              }
+              </View>
+            <View style={{height:100}}>
+              {
+                jobDetails?.company_email &&
+                <ThemeBtn
+                  btnTitle={"Send Mail"}
+                  // onPress={()=>openMail("787878")}
+                  onPress={()=>openMail(jobDetails.company_email)}
+                />
+              }
             <ThemeBtn
-              btnTitle={"Send Mail"}
-              onPress={()=>openMail("787878")}
-              // onPress={()=>openMail("saurabhtambolkar22@gmail.com")}
-            />
-            <ThemeBtn
-              btnTitle={"Cancel"}
+              btnTitle={"OK"}
               onPress={() => setIsSuccessModalOpen(false)}
             />
+            </View>
           </View>
         </View>
       </Modal>
     );
 
-  const errorModal = (
-    <Modal
-      visible={isErrorModalOpen}
-      animationType="slide"
-      transparent={true}
-      onRequestClose={() => setIsErrorModalOpen(!isErrorModalOpen)}
-    >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <View style={styles.modalImageContainer}>
-            <Image source={ImagesPath.errImg} style={styles.modalImage} />
-          </View>
-          <Text style={styles.modalTitleErr}>Oops, Failed !</Text>
-          <Text style={styles.modalText}>
-            Please check your internet connection and try again
-          </Text>
-          <ThemeBtn
-            btnTitle={"Try again"}
-            onPress={() => setIsSuccessModalOpen(!isSuccessModalOpen)}
-          />
-          <ThemeBtn
-            btnTitle={"Cancel"}
-            onPress={() => setIsErrorModalOpen(!isErrorModalOpen)}
-          />
-        </View>
-      </View>
-    </Modal>
-  );
 
   const [scrollPosition,setScrollPosition] = useState(0)
   const handleScrollEvent=(e)=>{
@@ -364,6 +385,30 @@ function ApplyJobs() {
     </html>
   `;
 
+    const showToast = (msg) => {
+      Toast.show({
+        type: "success",
+        text2: "Success",
+        text1: msg,
+        position: "top",
+      });
+    };
+  
+     const showErrToast = (msg) => {
+      // ToastAndroid.show(
+      //   "Status of the user has been changed.",
+      //   ToastAndroid.LONG,
+      // );
+      Toast.show({
+        type: "error",
+        text2: "Error",
+        text1: msg,
+        position: "top",
+      });
+    }; 
+  
+  
+  
   const addBookmark=async()=>{
     try{
       setAddingBookmark(true);
@@ -378,16 +423,18 @@ function ApplyJobs() {
           headers: { "Content-Type": "multipart/form-data" },
         }
       );
-      console.log(response.data)
+      // console.log(response.data)
       if(response.data.status){
-        setIsBookmarkAdded(true);
-        let newDataWithBookmarkAdded = {...jobDetails,bookmarkId:response.data.bookmark_id}
-        // console.log(newDataWithBookmarkAdded,newDataWithBookmarkAdded.bookmarkId)
+        // setIsBookmarkAdded(true);
+        let newDataWithBookmarkAdded = {...jobDetails,bookmark_id:response.data.bookmark_id}
+        // console.log(newDataWithBookmarkAdded,newDataWithBookmarkAdded.bookmark_id)
         setJobDetails(newDataWithBookmarkAdded);
+         showToast("Bookmark added successfully!")
       }
     }
     catch(err){
       console.log(err)
+       showErrToast("Bookmark was not added successfully!")
     }
     finally{
       setAddingBookmark(false)
@@ -396,24 +443,31 @@ function ApplyJobs() {
   const removeBookmark=async()=>{
     try{
       setAddingBookmark(true);
+      // console.log("bookamk to del",jobDetails?.bookmark_id)
        const userTok = await AsyncStorage.getItem("logged_in_user_token");
       const formdata = new FormData();
       formdata.append("token", userTok);
       const response = await apiInstance.post(
-        `bookmark/delete/${jobDetails?.bookmarkId}`,
+        `bookmark/delete/${jobDetails?.bookmark_id}`,
         // `bookmark/delete/5`,
         formdata,
         {
           headers: { "Content-Type": "multipart/form-data" },
         }
       );
-      console.log(response.data)
-      if(response.data.status){
-        setIsBookmarkAdded(false);
+      // console.log(response.data)
+      if (response.data.status) {
+       const updatedJobs = {...jobDetails,bookmark_id:null}
+      //  const updatedJobs = jobDetails.map((item) =>
+      //    jobDetails?.bookmark_id === id ? { ...item, bookmark_id: null } : item
+      //  );
+       setJobDetails(updatedJobs);
+         showToast("Bookmark removed successfully!")
       }
     }
     catch(err){
       console.log(err)
+       showErrToast("Bookmark was not removed successfully!")
     }
     finally{
       setAddingBookmark(false)
@@ -446,31 +500,61 @@ function ApplyJobs() {
                     color="#fff"
                     onPress={goBack}
                   />
+                  
                 </View>
+                {
+                  profile == "Job"
+                  &&
                 <View style={styles.rightside}>
-                  {
-                    addingBookmark
-                    ?
-                    <ActivityIndicator color={"#fff"}/>
-                    :
-                    isBookmarkAdded
-                    ?
-                    <FontAwesome name="bookmark" size={24} color="#fff" onPress={removeBookmark}/>
-                    :
-                    <FontAwesome name="bookmark-o" size={24} color="#fff" onPress={addBookmark} />
-                  }
-                  {/* <Entypo name="share" size={24} color="#fff" /> */}
+                  {addingBookmark ?
+                  <ActivityIndicator color={"#fff"}/>
+                  :
+                  jobDetails.bookmark_id == null ? (
+                             <FontAwesome
+                               name="bookmark-o"
+                               size={24}
+                               color={"#fff"}
+                               onPress={() => addBookmark()}
+                             />
+                           ) : (
+                             <FontAwesome
+                               name="bookmark"
+                               size={24}
+                               color={"#fff"}
+                               onPress={() => removeBookmark()}
+                             />
+                           )}
+
+                 
                 </View>
+                }
               </View>
               <View style={styles.topBased}>
-                <View style={styles.imageBg}>
-                  <Image
-                    source={ImagesPath.tcs}
-                    style={{ width: 60, height: 60, objectFit: "contain" }}
-                  />
-                </View>
+                    {
+            jobDetails.url == null
+            ?
+            jobDetails.company_name == null
+            ?
+            <View style={styles.nameBg}>
+             <FontAwesome name="building" size={24} color="#fff" />
+            </View> 
+            : 
+            <View style={styles.nameBg}>
+              <Text style={{color:"white",fontWeight:600,fontSize:25}}>{jobDetails?.company_name?.charAt(0)}</Text>
+            </View>  
+            :
+         <View style={styles.imageBg}>
+           <Image
+          //  source={ImagesPath.compLogo}
+            source={{uri:`https://godigiinfotech.com/${jobDetails.url}`}}
+           style={{ width: 50, height: 50}}
+            contentFit="fill"
+             transition={1000}
+           />
+           </View>
+                    }
                 <View>
-                  <Text style={styles.roleText}>
+                  <Text style={styles.roleText} onPress={()=>console.log(jobDetails?.bookmark_id)}>
                     {jobDetails?.title || "Not disclosed"}
                   </Text>
                   <View style={styles.compBased}>
@@ -505,7 +589,7 @@ function ApplyJobs() {
                   </View>
                   <View style={styles.part}>
                     <Ionicons name="people-sharp" size={24} color="#fff" />
-                    <Text style={styles.detail}>
+                    <Text style={styles.detail} numberOfLines={1} ellipsizeMode="tail">
                       {`${jobDetails.no_of_openings || 0} vacancies` ||
                         "Not disclosed"}
                     </Text>
@@ -513,15 +597,36 @@ function ApplyJobs() {
                 </View>
                 <View style={styles.rowDetails}>
                   <View style={styles.part}>
-                    <FontAwesome name="money" size={24} color="#fff" />
-                    <Text style={styles.detail}>
+                    <View style={{width:25,justifyContent:'center',alignItems:'center'}}>
+                     <FontAwesome name="rupee" size={24} color={"#fff"} />
+                    </View>
+                    <Text style={styles.detail} numberOfLines={1} ellipsizeMode="tail">
                       {jobDetails?.salary || "Not disclosed"}
                     </Text>
                   </View>
                   <View style={styles.part}>
                     <Entypo name="location-pin" size={24} color="#fff" />
-                    <Text style={styles.detail}>
+                    <Text style={styles.detail} numberOfLines={1} ellipsizeMode="tail">
                       {jobDetails?.city_name || "Not disclosed"}
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.rowDetails}>
+                  <View style={styles.part}>
+                    <View style={{width:25,justifyContent:'center',alignItems:'center'}}>
+                    <Ionicons name="laptop" size={24} color={"#fff"} />
+                    </View>
+                    <Text style={styles.detail} numberOfLines={1} ellipsizeMode="tail">
+                      {jobDetails?.
+job_work_type_title
+ || "Not disclosed"}
+                    </Text>
+                  </View>
+                  <View style={styles.part}>
+                    <MaterialCommunityIcons name="clock" size={24} color="#fff" />
+                    <Text style={styles.detail} numberOfLines={1} ellipsizeMode="tail">
+                      {jobDetails?.
+job_working_type_title || "Not disclosed"}
                     </Text>
                   </View>
                 </View>
@@ -559,9 +664,8 @@ function ApplyJobs() {
               />
             </View>
             <View style={styles.info}>
-              {selectedInfo == "Job Description" && (
+              {selectedInfo == "Description" && (
                 <View style={styles.jd}>
-                  <Text style={styles.subHead}>Job Description</Text>
                   {/* <Text style={styles.subHeadText}>
                     We are looking for a skilled and passionate Frontend
                     Developer to join our dynamic team at Tech Solutions Inc. As
@@ -574,20 +678,19 @@ function ApplyJobs() {
                   <AutoHeightWebView
                     customStyle={`
                              * {font-family: -apple-system, Roboto, Arial; font-size:14px; color:#333;}
-                             body {marginTop:20; padding:0;}
+                             body {marginTop:0; padding:0;}
                            `}
                     source={{ html: htmlContent }}
                     startInLoadingState
                     viewportContent={"width=device-width, user-scalable=no"}
                     scrollEnabled={false}
-                    style={{ width: "100%", marginTop: 20 }}
+                    style={{ width: "100%", marginTop: 0 }}
                   />
                 </View>
               )}
 
               {selectedInfo == "Qualification" && (
                 <View style={styles.jd}>
-                  <Text style={styles.subHead}>Qualification</Text>
                   {/* <FlatList
                     data={qualifications}
                     keyExtractor={(item, index) => index.toString()}
@@ -616,50 +719,21 @@ function ApplyJobs() {
               )} */}
               {selectedInfo == "Skills" && (
                 <View style={styles.jd}>
-                  <Text style={styles.subHead}>Required skills</Text>
                   <FlatList
                     data={jobDetails?.keyskills_names || []}
                     renderItem={renderSkills}
-                    keyExtractor={(item) => item.id}
+                    keyExtractor={(item) => item}
                     contentContainerStyle={styles.listContainer}
                   />
                 </View>
               )}
 
-              {selectedInfo == "More" && (
+              {selectedInfo == "About Company" && (
                 <>
                   <View style={styles.jd}>
-                    <Text style={styles.subHead}>Additional Information</Text>
-                    <View style={styles.infoRow}>
-                      <View style={styles.rightRow}>
-                        <Text style={styles.rowHead}>Education</Text>
-                        <Text style={styles.rowBd}>Graduate</Text>
-                      </View>
-                      <View style={styles.leftRow}>
-                        <Text style={styles.rowHead}>Experience</Text>
-                        <Text style={styles.rowBd}>
-                          {jobDetails?.min_year_of_exp || "Not disclosed"} -{" "}
-                          {jobDetails.max_year_of_exp || "Not disclosed"} years
-                        </Text>
-                      </View>
-                    </View>
-                    <View style={styles.infoRow}>
-                      <View style={styles.rightRow}>
-                        <Text style={styles.rowHead}>Vacancy</Text>
-                        <Text style={styles.rowBd}>
-                          {jobDetails?.no_of_openings || "Not disclosed"}
-                        </Text>
-                      </View>
-                      <View style={styles.leftRow}>
-                        <Text style={styles.rowHead}>Website</Text>
-                        <Text style={styles.rowBd} onPress={()=>goToUrl(jobDetails?.company_url)}>
-                          {jobDetails?.company_url || "Not disclosed"}
-                        </Text>
-                      </View>
-                    </View>
                   </View>
                   <View style={styles.jd}>
-                    <Text style={styles.subHead}>About Company</Text>
+                    {/* <Text style={styles.subHead}>About Company</Text> */}
                     <AutoHeightWebView
                       customStyle={`
                              * {font-family: -apple-system, Roboto, Arial; font-size:14px; color:#333;}
@@ -683,7 +757,6 @@ function ApplyJobs() {
               )}
             </View>
             {successModal}
-            {errorModal}
           </ScrollView>
           <View style={styles.btnView}>
             <ThemeBtn
@@ -718,7 +791,7 @@ const styles = StyleSheet.create({
     padding: 40,
     borderRadius: 30,
     width: "90%",
-    height: "50%",
+    height: "auto",
   },
   modalImageContainer: {
     justifyContent: "center",
@@ -732,7 +805,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 28,
     fontWeight: "bold",
-    color: "#0069cb",
+    color: Colors.bg,
     textAlign: "center",
   },
   modalTitleErr: {
@@ -757,7 +830,7 @@ const styles = StyleSheet.create({
   rowBd: {
     fontSize: 15,
     fontWeight: "semibold",
-    color: "#0069CB",
+    color: Colors.bg,
   },
   infoRow: {
     flexDirection: "row",
@@ -783,8 +856,8 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     paddingHorizontal: 10,
     borderRadius: 25,
-    borderColor: "#0069CB",
-    color: "#0069CB",
+    borderColor: Colors.bg,
+    color: Colors.bg,
     borderWidth: 2,
   },
   itemContainer: {
@@ -842,7 +915,7 @@ const styles = StyleSheet.create({
   },
   jd: {
     paddingHorizontal: 20,
-    marginVertical: 10,
+    // marginVertical: 10,
   },
   info: {},
   jobCategoryItem: {
@@ -857,7 +930,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   selectedJobCategory: {
-    borderBottomColor: "#0069CB",
+    borderBottomColor: Colors.bg,
     borderBottomWidth: 2,
   },
   jobCategoryText: {
@@ -868,7 +941,7 @@ const styles = StyleSheet.create({
   },
   selectedJobText: {
     fontSize: 14,
-    color: "#0069CB",
+    color: Colors.bg,
   },
   jobCategoryBar: {
     marginHorizontal: 0,
@@ -884,6 +957,7 @@ const styles = StyleSheet.create({
     gap: 10,
     width: "50%",
     marginVertical: 5,
+    // backgroundColor:"red"
   },
   typeView: {
     flexDirection: "row",
@@ -914,6 +988,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 600,
     color: "white",
+    width:"80%"
   },
   rowDetails: {
     flexDirection: "row",
@@ -921,11 +996,11 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
   },
   upperPart: {
-    backgroundColor: "#0069cb",
-    height: Platform.OS == "android" ? 320 : 450,
+    backgroundColor: Colors.bg,
+    height: Platform.OS == "android" ? 350 : 350,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
-    paddingTop: Platform.OS === "android" ? 10 : 40,
+    paddingTop: Platform.OS === "android" ? 10 : 10,
   },
   topPart: {
     flexDirection: "row",
@@ -956,6 +1031,17 @@ const styles = StyleSheet.create({
     borderColor: "lightgrey",
     borderWidth: 1,
   },
+   nameBg: {
+    borderRadius: 10,
+    borderColor: "#fff",
+    borderWidth: 1,
+    width: "20%",
+    height:50,
+    paddingVertical:5,
+    justifyContent: "center",
+    alignItems: "center",
+    // backgroundColor:Colors.bg
+  },
   topBased: {
     flexDirection: "row",
     justifyContent: "flex-start",
@@ -982,13 +1068,19 @@ const styles = StyleSheet.create({
   },
   contactHead: {
     fontWeight: "800",
-    fontSize: 18,
-    color: "black",
+    fontSize: 20,
+    color: Colors.bg,
     // marginBottom:20
+  },
+  contactHead2: {
+    fontWeight: "600",
+    fontSize: 14,
+    color: "#5f5c5cff",
+    marginTop:10
   },
   duraView: {
     flexDirection: "row",
-    justifyContent: "flex-start",
+    justifyContent: "space-between",
     alignItems: "flex-end",
     gap: 5,
     marginTop: 10,

@@ -11,9 +11,9 @@ import {
   ActivityIndicator,
   Image,
 } from "react-native";
-import { AntDesign, Entypo, FontAwesome, Ionicons } from "@expo/vector-icons";
+import { AntDesign, Entypo, Feather, FontAwesome, Fontisto, Ionicons } from "@expo/vector-icons";
 import ThemeBtn from "@/components/ThemeBtn";
-import { useNavigation } from "expo-router";
+import { useNavigation, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import apiInstance from "./interceptors";
 import { Colors } from "@/constants/Colors";
@@ -22,6 +22,7 @@ import WebView from "react-native-webview";
 import AutoHeightWebView from "react-native-autoheight-webview";
 import { BASE_URL } from "@/urlPath";
 import { SafeAreaView } from "react-native-safe-area-context";
+import * as ScreenCapture from "expo-screen-capture";
 
 export default function InterViewQuestionsDetails() {
 
@@ -80,6 +81,14 @@ export default function InterViewQuestionsDetails() {
     addInterviewQuestionsView();
   }, []);
 
+   useEffect(() => {
+    // Prevent screenshot
+    ScreenCapture.preventScreenCaptureAsync();
+    return () => {
+      ScreenCapture.allowScreenCaptureAsync();
+    };
+  }, []);
+
    const getInterviewQuestionsDetails = async (customStart) => {
      try {
        if (customStart == 0) {
@@ -102,7 +111,7 @@ export default function InterViewQuestionsDetails() {
         }
       );
 
-      // console.log("response of data", response.data.subject_name);
+      console.log("response of data", response.data);
       setSubjectName(response.data.subject_name);
        if (response.data.status) {
         //  setInterviewQuestionsList(response.data.data);
@@ -188,18 +197,20 @@ export default function InterViewQuestionsDetails() {
             padding: 0;
             margin: 0;
           }
-          p { margin: 0 0 8px; }
+          p { margin: 0 0 0 0 }
         </style>
       </head>
-      <body>${item.answer}</body>
+      <body>
+      
+      ${item.answer}</body>
     </html>
   `;
 
    return (
      <View style={styles.basedJob}>
-       <View style={{ flexDirection: "row", gap: 5 }}>
+       <View style={{ flexDirection: "row",gap:10,backgroundColor:Colors.bg,borderTopLeftRadius:10,borderTopRightRadius:10,padding:10 }}>
          <Text style={styles.question}>
-           Question {index + 1}
+           Q.{index + 1}
            {")"}
          </Text>
          <Text style={[styles.question, { width: "90%" }]}>
@@ -208,17 +219,9 @@ export default function InterViewQuestionsDetails() {
        </View>
 
        <View
-         style={{ height: "auto", marginTop: 10, flexDirection: "column", gap: 5 }}
+         style={{ height: "auto", margin: 0, flexDirection: "column", gap: 0,paddingHorizontal:10,paddingVertical:10 }}
        >
-         <Text style={styles.answerText}>
-           Answer :
-         </Text>
-         {/* <WebView
-           source={{ html: htmlContent }}
-           originWhitelist={["*"]}
-           style={{ flex: 1 }}
-           startInLoadingState
-         /> */}
+        
          <AutoHeightWebView
            customStyle={`
             * {font-family: -apple-system, Roboto, Arial; font-size:14px; color:#333;}
@@ -228,7 +231,7 @@ export default function InterViewQuestionsDetails() {
            startInLoadingState
            viewportContent={"width=device-width, user-scalable=no"}
            scrollEnabled={false}
-           style={{ width: "100%" }}
+           style={{ width: "100%"}}
          />
        </View>
      </View>
@@ -276,24 +279,29 @@ export default function InterViewQuestionsDetails() {
     //   getInterviewQuestionsDetails(newStart);
     // };
 
+    const router = useRouter();
+
+  const goToNotifications=()=>{
+    router.push("/notifications")
+  }
 
 
 
   return (
     <View style={styles.container}>
-      <View style={styles.topPart}>
-        <View style={styles.leftside}>
-          <AntDesign
-            name="arrowleft"
-            size={24}
-            color="black"
+     <View style={styles.topPart}>
+        <Feather name="arrow-left" size={24} 
+            color="#fff"
             onPress={goBack}
           />
-          <Text style={styles.pageName} numberOfLines={1} ellipsizeMode="tail">
+         <Text style={styles.pageName} numberOfLines={1} ellipsizeMode="tail">
             {subjectName || "null"} 
           </Text>
-        </View>
+          <View>
+            {/* <Fontisto name="bell" size={22} color="#fff" onPress={goToNotifications}/> */}
+          </View>
       </View>
+          
       {loadingData ? (
         <ActivityIndicator style={{ marginTop: 50 }} />
       ) : (
@@ -341,19 +349,20 @@ export default function InterViewQuestionsDetails() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fafafd",
+    backgroundColor: "#F2F2F2",
   },
   jobCont: {
     marginTop: 10,
     gap: 10,
     paddingHorizontal: 20,
   },
-  topPart: {
-    backgroundColor: "#fff",
+ topPart: {
+    backgroundColor: Colors.bg,
+    // backgroundColor: "red",
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 20,
+    paddingVertical: 10,
     shadowColor: "lightgrey",
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.85,
@@ -361,40 +370,40 @@ const styles = StyleSheet.create({
     elevation: 5,
     borderBottomColor: "lightgrey",
     borderBottomWidth: 0.5,
-    paddingTop: Platform.OS === "android" ? 50 : 50,
+    paddingTop: Platform.OS === "android" ? 50 : 70,
+    paddingHorizontal:20
   },
   leftside: {
     gap: 10,
     flexDirection: "row",
     alignItems: "center",
-    marginHorizontal: 20,
+    // marginHorizontal: 20,
   },
   pageName: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "black",
-    width: "80%",
+    color:"#fff"
   },
   basedJob: {
     backgroundColor: "#fff",
     width: "100%",
-    gap: 5,
+    marginTop:5,
+    // gap: 5,
     // height: 180,
     borderRadius: 10,
-    marginVertical: 10,
+    marginVertical: 2,
     borderWidth: 0.5,
     borderColor: "lightgrey",
-    padding: 15,
-    elevation: 3,
-    shadowColor: "gray",
-    shadowOpacity: 1,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 2 },
+      shadowColor: "black",
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: 2,
+    shadowOpacity: 0.12,
+    elevation: 2,
   },
   question: {
     fontSize: 14,
     fontWeight: 800,
-    color: Colors.bg,
+    color: "#fff",
   },
   answer: {
     fontSize: 13,
@@ -404,6 +413,10 @@ const styles = StyleSheet.create({
   answerText: {
     fontSize: 13,
     fontWeight: 700,
-    color: Colors.bg,
+    // color: Colors.bg,
+    // backgroundColor: "#E4E4E4",
+    color: "#3E3B3B",
+    marginBottom:-10,
+    paddingLeft:5
   },
 });

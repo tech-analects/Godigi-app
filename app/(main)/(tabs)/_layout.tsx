@@ -6,6 +6,7 @@ import {
   FontAwesome,
   FontAwesome5,
   FontAwesome6,
+  Fontisto,
   Foundation,
   Ionicons,
   MaterialCommunityIcons,
@@ -19,11 +20,14 @@ import {
   StyleSheet,
   Image,
   Pressable,
+  Platform,
+  StatusBar,
 } from "react-native";
 import { Tabs, useRouter } from "expo-router";
 import { ImagesPath } from "@/constants/ImagesPath";
 import { UserContext } from "../../UserContext";
 import { DrawerActions, useNavigation } from "@react-navigation/native";
+import { Colors } from "@/constants/Colors";
 
 function DrawerButton() {
   const navigation = useNavigation();
@@ -61,52 +65,167 @@ export default function TabLayout() {
   const goToNotifications=()=>{
     router.push("/notifications")
   }
+
+const Triangle = () => (
+  <View
+    style={{
+      width: 30,
+      height: 30,
+      backgroundColor:"#fff",
+      position: "absolute",
+      bottom:19,
+      zIndex:-1,
+      borderTopLeftRadius:13,
+      borderLeftWidth:2,
+      borderTopWidth:2,
+      borderColor:Colors.bg,
+      transform: [{ rotate: "45deg" }]
+
+    }}
+  >
+    {/* Dot circle */}
+    <View
+      style={{
+        position: "absolute",
+        top: 6, // 1.25x of 5 (original)
+        left:6,
+        alignSelf: "center",
+        width: 8.75, // 1.25x of 7
+        height: 8.75,
+        borderRadius: 4.375, // half of width/height for perfect circle
+        backgroundColor: Colors.bg,
+      }}
+    />
+  </View>
+);
+
+
+
+
+
+
+
+
   return (
-    <View style={{ flex: 1 }}>
-      {/* Tabs (Content of the app) */}
+    // <View style={{ flex: 1, backgroundColor: "#f2f2f2" }}>
+    //   {/* Tabs (Content of the app) */}
+    // </View>
+    <>
+    <StatusBar barStyle={"light-content"} />
       <Tabs
         screenOptions={{
-          tabBarActiveTintColor: "#0069CB",
+          tabBarActiveTintColor: Colors.bg,
           tabBarLabelStyle: {
             fontSize: 10,
             fontWeight: "bold",
           },
+          // tabBarStyle: Platform.select({
+          //   ios: {
+          //     // Use a transparent background on iOS to show the blur effect
+          //     // position: "absolute",
+          //     backgroundColor: "#fff",
+          //     height: 60,
+          //     // 🔴 RED BACKGROUND
+          //     marginHorizontal: 10,
+          //     marginBottom: 20,
+          //     borderRadius: 60,
+          //     justifyContent: "center",
+          //     alignItems: "center",
+          //     paddingTop: 10,
+          //     overflow: "hidden",
+          //     shadowOffset: { width: 2, height: 5 },
+          //     shadowColor: "black",
+          //     shadowOpacity: 0.02,
+          //     elevation: 4,
+          //     shadowRadius: 10,
+          //   },
+          //   android: {
+          //     backgroundColor: "#fff",
+          //     marginHorizontal: 10,
+          //     marginBottom: 20,
+          //     // height:50,
+          //     borderRadius: 40,
+          //     justifyContent: "center",
+          //     alignItems: "center",
+          //     // paddingTop: 10,
+          //     // paddingBottom: 10,
+          //     height: 60,
+          //     shadowOffset: { width: 0, height: -3 },
+          //     shadowColor: "grey",
+          //     shadowOpacity: 0.02,
+          //     elevation: 4,
+          //     shadowRadius: 10,
+          //   },
+          //   default: {
+          //     backgroundColor: "#fff",
+          //     marginHorizontal: 10,
+          //     marginVertical: 10,
+          //     borderRadius: 20,
+          //     justifyContent: "center",
+          //     alignItems: "center",
+          //     paddingTop: 5,
+          //   },
+          // }),
+           tabBarStyle: {
+          position: "absolute",   // make it float
+          // backgroundColor: "rgba(255,255,255,0.8)", // transparent white
+          backgroundColor: "#fff", // transparent white
+          bottom:20,
+          borderRadius: 40,
+          marginHorizontal: 20,
+          marginBottom: 20,
+          height: 60,
+          // shadowOffset: { width: 0, height: 5 },
+          // shadowColor: "black",
+          // shadowOpacity: 0.1,
+          // shadowRadius: 8,
+          // elevation: 5,
+          borderColor:Colors.bg,
+          borderWidth:2,
+          borderTopWidth:2
+        },
           // headerLeft: () => <DrawerButton />,
         }}
       >
         <Tabs.Screen
           name="home"
           options={{
-            title: "Godigi",
+            title: "Home",
             tabBarIcon: ({ color, focused }) => {
               return focused ? (
-                <Foundation name="home" size={28} color={color} />
+                <>
+                  <Foundation name="home" size={28} color={color} />
+                  {focused && <Triangle />}
+                </>
               ) : (
                 <Octicons name="home" size={24} color={color} />
               );
             },
             headerTitle: () => (
               <Image
-                source={ImagesPath.logoApp} // <-- change path as needed
+                source={ImagesPath.logoWhite} // <-- change path as needed
                 style={{ width: 100, height: 30, resizeMode: "contain" }}
               />
             ),
+            headerTitleAlign: "center",
             headerShown: true,
-            headerStyle: { backgroundColor: "#fff", shadowColor: "#fff" },
+            headerStyle: { backgroundColor: Colors.bg, shadowColor: Colors.bg,height: 100, },
             headerLeft: () => (
               <TouchableOpacity
                 // onPress={toggleDrawer}
                 onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
                 style={{ paddingHorizontal: 20 }}
               >
+                {/* <Entypo name="menu" size={30} color="#fff" /> */}
                 <Image source={ImagesPath.menuIcon} />
               </TouchableOpacity>
             ),
-            headerRight: () => (
-              <TouchableOpacity onPress={goToNotifications} style={styles.icon}>
-                <FontAwesome name="bell" size={18} color="#0069CB" />
-              </TouchableOpacity>
-            ),
+            // headerRight: () => (
+            //   <TouchableOpacity onPress={goToNotifications} style={styles.icon}>
+            //     <Fontisto name="bell" size={22} color="#fff" />
+            //     {/* <FontAwesome name="bell" size={18} color="#fff" /> */}
+            //   </TouchableOpacity>
+            // ),
           }}
         />
         {/* <Tabs.Screen
@@ -155,26 +274,24 @@ export default function TabLayout() {
             title: "Courses",
             tabBarIcon: ({ color, focused }) => {
               return focused ? (
-                <FontAwesome5 name="book-open" size={24} color={color} />
+                <>
+                  {focused && <Triangle />}
+                  <FontAwesome5 name="book-open" size={24} color={color} />
+                </>
               ) : (
                 <Feather name="book-open" size={24} color={color} />
               );
             },
-            headerStyle: { backgroundColor: "#fff" },
-            headerTitle: () => (
-              <View
-                style={{
-                  flex: 1,
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                <Text
-                  style={{ color: "black", fontSize: 20, fontWeight: "500" }}
-                >
-                  Courses
-                </Text>
-              </View>
+            headerStyle: {
+              height: 100,
+              backgroundColor: Colors.bg,
+              shadowColor: "#fff",
+              // borderBottomLeftRadius: 30,
+              // borderBottomRightRadius: 30,
+            },
+              headerTitleAlign: "center",
+           headerTitle: () => (
+              <Text style={{ color: "white", fontSize: 20, fontWeight: "500" }}>Courses</Text>
             ),
             headerLeft: () => (
               <TouchableOpacity
@@ -185,6 +302,14 @@ export default function TabLayout() {
                 <Image source={ImagesPath.menuIcon} />
               </TouchableOpacity>
             ),
+            // headerRight: () => (
+            //   <TouchableOpacity
+            //     style={{ paddingHorizontal: 20 }}
+            //     onPress={goToNotifications}
+            //   >
+            //      <Fontisto name="bell" size={22} color="#fff" />
+            //   </TouchableOpacity>
+            // ),
           }}
         />
         <Tabs.Screen
@@ -193,26 +318,24 @@ export default function TabLayout() {
             title: "Jobs",
             tabBarIcon: ({ color, focused }) => {
               return focused ? (
-                <Entypo name="briefcase" size={24} color={color} />
+                <>
+                  {focused && <Triangle />}
+                  <Entypo name="briefcase" size={24} color={color} />
+                </>
               ) : (
                 <Ionicons name="briefcase-outline" size={24} color={color} />
               );
             },
-            headerStyle: { backgroundColor: "#fff" },
-            headerTitle: () => (
-              <View
-                style={{
-                  flex: 1,
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                <Text
-                  style={{ color: "black", fontSize: 20, fontWeight: "500" }}
-                >
-                  My Jobs
-                </Text>
-              </View>
+            headerStyle: {
+              height: 100,
+              backgroundColor: Colors.bg,
+              shadowColor: "#fff",
+              // borderBottomLeftRadius: 30,
+              // borderBottomRightRadius: 30,
+            },
+              headerTitleAlign: "center",
+             headerTitle: () => (
+              <Text style={{ color: "white", fontSize: 20, fontWeight: "500" }}>My Jobs</Text>
             ),
             headerLeft: () => (
               <TouchableOpacity
@@ -223,6 +346,14 @@ export default function TabLayout() {
                 <Image source={ImagesPath.menuIcon} />
               </TouchableOpacity>
             ),
+            //  headerRight: () => (
+            //   <TouchableOpacity
+            //     style={{ paddingHorizontal: 20 }}
+            //     onPress={goToNotifications}
+            //   >
+            //      <Fontisto name="bell" size={22} color="#fff" />
+            //   </TouchableOpacity>
+            // ),
           }}
         />
         <Tabs.Screen
@@ -231,30 +362,24 @@ export default function TabLayout() {
             title: "Profile",
             tabBarIcon: ({ color, focused }) => {
               return focused ? (
-                <Ionicons name="person-sharp" size={24} color={color} />
+                <>
+                  {focused && <Triangle />}
+                  <Ionicons name="person-sharp" size={24} color={color} />
+                </>
               ) : (
                 <FontAwesome6 name="user" size={24} color={color} />
               );
             },
             headerStyle: {
-              backgroundColor: "#fff",
-              shadowColor: "transparent",
-              elevation: 0,
+              height: 100,
+              backgroundColor: Colors.bg,
+              shadowColor: "#fff",
+              // borderBottomLeftRadius: 30,
+              // borderBottomRightRadius: 30,
             },
-            headerTitle: () => (
-              <View
-                style={{
-                  flex: 1,
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                <Text
-                  style={{ color: "black", fontSize: 20, fontWeight: "500" }}
-                >
-                  Profile
-                </Text>
-              </View>
+              headerTitleAlign: "center",
+             headerTitle: () => (
+              <Text style={{ color: "white", fontSize: 20, fontWeight: "500" }}>Profile</Text>
             ),
             headerLeft: () => (
               <TouchableOpacity
@@ -265,10 +390,18 @@ export default function TabLayout() {
                 <Image source={ImagesPath.menuIcon} />
               </TouchableOpacity>
             ),
+            //  headerRight: () => (
+            //   <TouchableOpacity
+            //     style={{ paddingHorizontal: 20 }}
+            //     onPress={goToNotifications}
+            //   >
+            //      <Fontisto name="bell" size={22} color="#fff" />
+            //   </TouchableOpacity>
+            // ),
           }}
         />
       </Tabs>
-    </View>
+    </>
   );
 }
 
@@ -291,13 +424,13 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
   icon: {
-    backgroundColor: "rgba(151, 199, 255, 0.32)",
+    // backgroundColor: "rgba(151, 199, 255, 0.32)",
     height: 40,
     width: 40,
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 50,
-    marginRight:20
+    marginRight:10
   },
   options: {
     paddingHorizontal: 20,

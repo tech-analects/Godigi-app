@@ -20,7 +20,7 @@ import {
   MaterialIcons,
 } from "@expo/vector-icons";
 import ThemeBtn from "@/components/ThemeBtn";
-import * as DocumentPicker from "expo-document-picker";
+// import * as DocumentPicker from "expo-document-picker";
 import { Colors } from "@/constants/Colors";
 import { ImagesPath } from "@/constants/ImagesPath";
 import { useNavigation } from "@react-navigation/native";
@@ -33,19 +33,20 @@ function WorkExpForm() {
   const [file, setFile] = useState();
 
   const pickFile = async () => {
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: "*/*", // You can specify types like application/pdf, image/*, etc.
-      });
+    // try {
+    //   const result = await DocumentPicker.getDocumentAsync({
+    //     type: "*/*", // You can specify types like application/pdf, image/*, etc.
+    //   });
 
-      if (result.type === "success") {
-        setFile(result);
-      } else {
-        console.log("File selection was canceled");
-      }
-    } catch (error) {
-      console.error("Error picking document: ", error);
-    }
+    //   if (result.type === "success") {
+    //     setFile(result);
+    //   } else {
+    //     console.log("File selection was canceled");
+    //   }
+    // } catch (error) {
+    //   console.error("Error picking document: ", error);
+    // }
+    console.log("hello")
   };
 
   const navigation = useNavigation();

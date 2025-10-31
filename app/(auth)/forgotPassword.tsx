@@ -8,9 +8,10 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { AntDesign } from "@expo/vector-icons";
+import { AntDesign, Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import apiInstance from "../interceptors";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 function ForgotPassword() {
   const [selectedTab, setSelectedTab] = useState("email");
@@ -23,64 +24,134 @@ function ForgotPassword() {
     navigation.goBack();
   };
 
+
   const goToVerifyCode = (otp,userId) => {
     // navigation.navigate("verifyCode");
     console.log(otp)
     navigation.navigate("verifyCode", { otp:otp ,userId:userId});
-    // router.push("/")
+    // navigation.navigate("resetPassword");
+    // router.push("/verifyCode")
   };
 
-  const sendCode = async () => {
+  // const sendCode = async () => {
    
 
-    try {
-      if (!emailOrPhone.trim()) {
-        setErrorMessage("Please enter your Email or Phone number.");
+  //   try {
+  //     if (!emailOrPhone.trim()) {
+  //       setErrorMessage("Please enter your Email or Phone number.");
+  //       return;
+  //     }
+
+  //     if (selectedTab === "email") {
+  //       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  //       if (!emailRegex.test(emailOrPhone)) {
+  //         setErrorMessage("Please enter a valid Email address.");
+  //         return;
+  //       }
+  //     } else {
+  //       const phoneRegex = /^[0-9]{10}$/;
+  //       if (!phoneRegex.test(emailOrPhone)) {
+  //         setErrorMessage("Please enter a valid 10-digit Phone number.");
+  //         return;
+  //       }
+  //     }
+  //     setSendingCode(true);
+  //      const formdata = new FormData();
+  //      formdata.append("phone_email", emailOrPhone);
+  //      console.log(formdata)
+  //      const response = await apiInstance.post(
+  //        "forgot-password-send-otp",
+  //        formdata,
+  //        {
+  //          headers: { "Content-Type": "multipart/form-data" },
+  //        }
+  //      );
+  //      console.log(response.data,JSON.parse(response.data.status))
+  //      if(JSON.parse(response.data.status)){
+  //         goToVerifyCode(response.data.otp, response.data.user_id);
+  //      }
+  //      else{
+  //        setErrorMessage(response.data.message)
+  //      }
+  //   } catch (error) {
+  //     console.log(error);
+  //   } finally {
+  //     setSendingCode(false);
+  //   }
+  // };
+
+  const sendCode = async () => {
+  try {
+    // === OTP LIMIT LOGIC START ===
+    const now = Date.now();
+    const storedData = await AsyncStorage.getItem('otp_attempts');
+    let attempts = storedData ? JSON.parse(storedData) : [];
+
+    // Filter only attempts within last 10 minutes
+    attempts = attempts.filter(t => now - t < 10 * 60 * 1000);
+
+    if (attempts.length >= 3) {
+      setErrorMessage("You have reached the maximum OTP requests. Try again after 10 minutes.");
+      return;
+    }
+
+    // === Validation Section ===
+    if (!emailOrPhone.trim()) {
+      setErrorMessage("Please enter your Email or Phone number.");
+      return;
+    }
+
+    if (selectedTab === "email") {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(emailOrPhone)) {
+        setErrorMessage("Please enter a valid Email address.");
         return;
       }
-
-      if (selectedTab === "email") {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(emailOrPhone)) {
-          setErrorMessage("Please enter a valid Email address.");
-          return;
-        }
-      } else {
-        const phoneRegex = /^[0-9]{10}$/;
-        if (!phoneRegex.test(emailOrPhone)) {
-          setErrorMessage("Please enter a valid 10-digit Phone number.");
-          return;
-        }
+    } else {
+      const phoneRegex = /^[0-9]{10}$/;
+      if (!phoneRegex.test(emailOrPhone)) {
+        setErrorMessage("Please enter a valid 10-digit Phone number.");
+        return;
       }
-      setSendingCode(true);
-       const formdata = new FormData();
-       formdata.append("phone_email", emailOrPhone);
-       console.log(formdata)
-       const response = await apiInstance.post(
-         "forgot-password-send-otp",
-         formdata,
-         {
-           headers: { "Content-Type": "multipart/form-data" },
-         }
-       );
-       console.log(response.data,JSON.parse(response.data.status))
-       if(JSON.parse(response.data.status)){
-          goToVerifyCode(response.data.otp, response.data.user_id);
-       }
-       else{
-         setErrorMessage(response.data.message)
-       }
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setSendingCode(false);
     }
-  };
+
+    setSendingCode(true);
+    const formdata = new FormData();
+    formdata.append("phone_email", emailOrPhone);
+
+    attempts.push(now);
+      await AsyncStorage.setItem('otp_attempts', JSON.stringify(attempts));
+      console.log("added")
+
+    const response = await apiInstance.post(
+      "forgot-password-send-otp",
+      formdata,
+      { headers: { "Content-Type": "multipart/form-data" } }
+    );
+
+    console.log(response.data);
+
+    if (JSON.parse(response.data.status)) {
+      // Store this attempt
+      attempts.push(now);
+      await AsyncStorage.setItem('otp_attempts', JSON.stringify(attempts));
+
+      goToVerifyCode(response.data.otp, response.data.user_id);
+    } else {
+      setErrorMessage(response.data.message);
+    }
+  } catch (error) {
+    console.log(error);
+    setErrorMessage("Something went wrong. Please try again.");
+  } finally {
+    setSendingCode(false);
+  }
+};
 
   return (
     <View style={styles.bgMain}>
-      <TouchableOpacity onPress={goBack} style={{ marginTop: 20 }}>
-        <AntDesign name="arrowleft" size={24} color="black" />
+      <TouchableOpacity onPress={goBack} style={{ marginTop: 40 }}>
+        <Feather name="arrow-left" size={24}  color="black" />
       </TouchableOpacity>
 
       <View style={styles.main}>
@@ -132,6 +203,7 @@ function ForgotPassword() {
         <ThemeBtn
           btnTitle={"Send Code"}
           onPress={sendCode}
+          // onPress={goToVerifyCode}
           loadingBtn={sendingCode}
         />
       </View>
@@ -149,6 +221,7 @@ export function EmailForm({ emailOrPhone, setEmailOrPhone ,setErrorMessage}) {
         value={emailOrPhone}
         onChangeText={(text)=>{setEmailOrPhone(text);setErrorMessage("")}}
         style={Colors.inputbox}
+        placeholderTextColor={"gray"}
       />
     </View>
   );
@@ -167,6 +240,7 @@ export function PhoneForm({ emailOrPhone, setEmailOrPhone, setErrorMessage }) {
           setErrorMessage("");
         }}
         style={Colors.inputbox}
+        placeholderTextColor={"gray"}
       />
     </View>
   );

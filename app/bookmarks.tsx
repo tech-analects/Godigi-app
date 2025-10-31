@@ -1,14 +1,13 @@
 import ThemeBtn from "@/components/ThemeBtn";
 import { Colors } from "@/constants/Colors";
 import { ImagesPath } from "@/constants/ImagesPath";
-import { AntDesign, Entypo, FontAwesome } from "@expo/vector-icons";
+import { AntDesign, Entypo, Feather, FontAwesome, FontAwesome6, Fontisto } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
-  Image,
   Modal,
   Platform,
   Pressable,
@@ -17,70 +16,18 @@ import {
 import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import apiInstance from "./interceptors";
+import { Image } from "expo-image";
 
 function Bookmark() {
-  const recJobArray = [
-    {
-      id: 1,
-      role: "Frontend Developer",
-      company: "TCS",
-      packageRange: "$60,000 - $80,000",
-      rating: 4.5,
-      location: "San Francisco, CA",
-      posted: "5 days ago",
-      type: ["Full Time", "Remote", "Director"],
-    },
-    {
-      id: 2,
-      role: "UX/UI Designer",
-      company: "DesignCo",
-      packageRange: "$50,000 - $70,000",
-      rating: 4.2,
-      location: "New York, NY",
-      posted: "5 days ago",
-      type: ["Full Time", "Remote", "Director"],
-    },
-    {
-      id: 3,
-      role: "Marketing Manager",
-      company: "TCS",
-      packageRange: "$70,000 - $90,000",
-      rating: 4.7,
-      location: "Los Angeles, CA",
-      posted: "5 days ago",
-      type: ["Full Time", "Remote", "Director"],
-    },
-    {
-      id: 4,
-      role: "Backend Developer",
-      company: "Amdocs",
-      packageRange: "$80,000 - $100,000",
-      rating: 4.6,
-      location: "Austin, TX",
-      posted: "5 days ago",
-      type: ["Full Time", "Remote", "Director"],
-    },
-    {
-      id: 5,
-      role: "Product Manager",
-      company: "NextGen Solutions",
-      packageRange: "$90,000 - $120,000",
-      rating: 4.8,
-      location: "Seattle, WA",
-      posted: "5 days ago",
-      type: ["Full Time", "Remote", "Director"],
-    },
-  ];
-
-  const type = ["Full Time", "Remote", "Director"];
+ 
 
   const router = useRouter();
 
  const goToJobDetails = (id) => {
-    console.log("hello");
+    console.log("hello",id);
     router.push({
       pathname:'/applyJobs',
-      params:{id:id}
+      params:{id:id,prf:"Jobs"}
     });
   };
 
@@ -177,74 +124,110 @@ function Bookmark() {
 //   );
 
 const prfBasedJobItem = ({ item, index }) => (
-    <TouchableOpacity onPress={() => goToJobDetails(item.job_id)} style={styles.basedJob}>
+    <View style={styles.basedJob}>
+      {/* <View style={styles.topBased}>
+      </View> */}
       <View style={styles.topPartRec}>
-        <View style={styles.topBased}>
-          <Image
-            source={ImagesPath.fb}
-            style={{ width: 50, height: 50, objectFit: "contain" }}
-          />
-          <View>
+          {
+                   item.img_url == null
+                     ?
+                     <View style={styles.nameBg}>
+                       <Text style={{ color: Colors.bg, fontWeight: 600, fontSize: 25 }}>{item?.company_name?.charAt(0) || "A"}</Text>
+                     </View>
+                     :
+                     <View style={styles.imageBg}>
+                       <Image
+                         source={{ uri: `https://godigiinfotech.com/${item.img_url}` }}
+                         // source={{uri:``}}
+                         style={{ height: 50, width: "100%" }}
+                         transition={1000}
+                         contentFit="scale-down"
+                       />
+                     </View>
+                 }
+        <TouchableOpacity
+          onPress={() => goToJobDetails(item.job_id)}
+          // onPress={()=>showToast("hello")}
+          style={{ width: "75%"}}
+        >
+          <View style={{flexDirection:"row",justifyContent:'space-between'}}>
             <Text
-              style={[styles.roleText, { width: 200 }]}
+              style={[styles.roleText, { width: "100%" }]}
               numberOfLines={1}
               ellipsizeMode="tail"
             >
               {item.title}
             </Text>
-            <View style={styles.compBased}>
-              <Text style={styles.compText}>{item.company_name}</Text>
-              {/* <View style={styles.review}>
-                <Text style={styles.subText}>
-                  <AntDesign
-                    name="star"
-                    size={14}
-                    color="#FFCC00"
-                    style={{ marginHorizontal: 50 }}
-                  />
-                  {item.rating}
-                </Text>
-              </View> */}
+             {/* {addingBookmark && (item.id == jobIdBookmarking || item.bookmark_id == jobIdBookmarking) ? (
+            <ActivityIndicator />
+          ) : item.bookmark_id == null ? (
+            <FontAwesome
+              name="bookmark-o"
+              size={24}
+              color={Colors.bg}
+              onPress={() => addBookmark(item.id)}
+            />
+          ) : (
+            <FontAwesome
+              name="bookmark"
+              size={24}
+              color={Colors.bg}
+              onPress={() => removeBookmark(item.bookmark_id)}
+            />
+          )} */}
+          </View>
+ <View>
+            <View
+              style={{
+                flexDirection: "row",
+                gap: 5,
+                marginTop: 5,
+                justifyContent: 'flex-start'
+              }}
+            >
+              <View style={{ width: 20, justifyContent: "center", alignItems: "center" }}>
+                <FontAwesome name="building" size={16} color="#929090ff" />
+              </View>
+              {/* <FontAwesome6 name="building-columns" size={16} color="#AEAEAE" /> */}
+
+              <Text style={styles.compText} >{item.company_name || "Not Disclosed"}</Text>
             </View>
-            <View style={{ marginTop: 10 }}>
-              <View style={styles.btRightPart}>
-                <Entypo name="location-pin" size={22} color="grey" />
-                <Text style={styles.btsubText}>{item.city_name}</Text>
+            <View
+              style={{
+                flexDirection: "row",
+                gap: 5,
+                marginTop: 5,
+                justifyContent: 'flex-start'
+              }}
+            >
+              <View style={{ width: 20, justifyContent: "flex-start", alignItems: "flex-start" }}>
+                <Entypo name="location-pin" size={20} color="#929090ff" />
               </View>
-              <View style={styles.btRightPart}>
-                <FontAwesome name="briefcase" size={18} color="gray" />
-                <Text style={styles.btsubText}>{item.salary}</Text>
-              </View>
-              {/* <Text style={styles.bttimeText}>posted 20h ago</Text> */}
+              <Text
+                style={[styles.btsubText, { width: "80%" }]}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {item.city_names}
+              </Text>
             </View>
           </View>
-        </View>
-        {/* <View
-          style={{
-            flexDirection: "column",
-            height: 120,
-            justifyContent: "space-between",
-            alignItems: "flex-end",
-          }}
-        >
-          <FontAwesome name="bookmark" size={24} color={Colors.bg} />
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
-            <Text style={{ fontSize: 12, fontWeight: 700, color: "gray" }}>
-              2k
-            </Text>
-            <AntDesign name="eye" size={18} color="gray" />
-          </View>
-        </View> */}
+        </TouchableOpacity>
       </View>
+      
 
-
-      {/* <View style={styles.bottompart}>
-        <View style={styles.btRightPart}>
-          <Entypo name="location-pin" size={24} color="grey" />
-          <Text style={styles.btsubText}>{item.location}</Text>
+      <View style={styles.bottompart}>
+        <View style={styles.bottomEnit}>
+          <Text style={styles.btsubText}>{item.no_of_openings} vacancies</Text>
         </View>
-      </View> */}
-    </TouchableOpacity>
+        <View style={styles.bottomEnit}>
+          <Text style={styles.btsubText}>{item.min_year_of_exp + "-" + item.max_year_of_exp} Years</Text>
+        </View>
+        <View style={styles.bottomEnit}>
+          <Text style={styles.btsubText}>{item.created_at?.split(" ")[0] || "NA"}</Text>
+        </View>
+      </View>
+    </View>
   );
 
   const [bottomSheetVisible, setBottomSheetVisible] = useState(false);
@@ -256,19 +239,22 @@ const prfBasedJobItem = ({ item, index }) => (
     navigation.goBack();
   };
    const [activeTab, setActiveTab] = useState("Courses");
+   
+     const goToNotifications=()=>{
+       router.push("/notifications")
+     }
 
   return (
     <View style={styles.bgMain}>
-      <View style={styles.topPartHead}>
-        <View style={styles.leftside}>
-          <AntDesign
-            name="arrowleft"
-            size={24}
-            color="black"
+     <View style={styles.topPart}>
+          <Feather name="arrow-left" size={24} 
+            color="#fff"
             onPress={goBack}
           />
           <Text style={styles.pageName}>Bookmarks</Text>
-        </View>
+          <View>
+            {/* <Fontisto name="bell" size={22} color="#fff" onPress={goToNotifications}/> */}
+          </View>
       </View>
       {/* <View style={styles.topPart}>
         <View style={styles.savedText}>
@@ -287,13 +273,14 @@ const prfBasedJobItem = ({ item, index }) => (
         ?
         <ActivityIndicator style={{marginTop:50}}/>
         :
-      <View style={{ paddingHorizontal: 20 }}>
+      <View style={{ paddingHorizontal: 10 }}>
       
             <FlatList
               data={bookMarkData}
               showsVerticalScrollIndicator={false}
               renderItem={prfBasedJobItem}
               keyExtractor={(item) => item.id.toString()}
+              contentContainerStyle={{padding:10}}
               ListEmptyComponent={() => {
                           return (
                             <View
@@ -318,103 +305,6 @@ const prfBasedJobItem = ({ item, index }) => (
             />
       </View>
       }
-      {/* {isFilterViewOpen && (
-        <View style={styles.filterView}>
-          <View style={styles.filCont}>
-            <Text style={styles.filText}>Alphabetical (A -Z)</Text>
-          </View>
-          <View style={styles.filCont}>
-            <Text style={styles.filText}>Most recent</Text>
-          </View>
-          <View style={styles.filCont}>
-            <Text style={styles.filText}>Highest Salary</Text>
-          </View>
-          <View style={styles.filCont}>
-            <Text style={styles.filText}>Newly posted</Text>
-          </View>
-          <View style={styles.filCont}>
-            <Text style={styles.filText}>Ending Soon</Text>
-          </View>
-        </View>
-      )} */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={bottomSheetVisible}
-        onRequestClose={() => setBottomSheetVisible(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalheading}>Remove from saved ?</Text>
-            <View style={styles.hr}></View>
-            <View style={styles.basedJob}>
-              <View style={styles.topPartRec}>
-                <View style={styles.topBased}>
-                  <View style={styles.imageBg}>
-                    <Image
-                      source={ImagesPath.tcs}
-                      style={{ width: 50, height: 50, objectFit: "contain" }}
-                    />
-                  </View>
-                  <View>
-                    <Text style={styles.roleText}>Frontend Developer</Text>
-                    <View style={styles.compBased}>
-                      <Text style={styles.compText}>TCS</Text>
-                      <View style={styles.review}>
-                        <Text style={styles.subText}>
-                          <AntDesign
-                            name="star"
-                            size={14}
-                            color="#FFCC00"
-                            style={{ marginHorizontal: 50 }}
-                          />
-                          4.5
-                        </Text>
-                        <View style={styles.line}></View>
-                        <Text style={styles.rev}>Review</Text>
-                      </View>
-                    </View>
-                  </View>
-                </View>
-                <FontAwesome
-                  name="bookmark"
-                  size={24}
-                  color="#0069CB"
-                  onPress={() => setBottomSheetVisible(!bottomSheetVisible)}
-                />
-              </View>
-              <View style={styles.package}></View>
-              <View style={styles.typeView}>
-                {type.map((i, index) => {
-                  // Return the Text component for each job type
-                  return (
-                    <Text style={styles.type} key={index}>
-                      {i}
-                    </Text>
-                  );
-                })}
-              </View>
-              <View style={styles.dottedLine}></View>
-              <View style={styles.bottompart}>
-                <View style={styles.btRightPart}>
-                  <Entypo name="location-pin" size={24} color="grey" />
-                  <Text style={styles.btsubText}>San Francisco,CA</Text>
-                </View>
-                <View style={styles.btLeftPart}>
-                  <Text style={styles.btsubText}>5 days ago</Text>
-                </View>
-              </View>
-            </View>
-            <View style={styles.btns}>
-              <ThemeBtn
-                btnTitle={"Cancel"}
-                onPress={() => setBottomSheetVisible(!bottomSheetVisible)}
-              />
-              <ThemeBtn btnTitle={"Yes,Remove"} onPress={goToJobDetails} />
-            </View>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }
@@ -481,17 +371,34 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
   },
-  topPart: {
+   topPart: {
+    backgroundColor: Colors.bg,
+       height:100,
+    // backgroundColor: "red",
     flexDirection: "row",
-    justifyContent: "center",
+    justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "white",
-    borderRadius: 15, // optional: if you want overall rounding
-    overflow: "hidden", // to clip child radius
-    marginHorizontal: 20,
-    marginVertical: 10,
-    borderWidth: 1,
-    borderColor: "#e2e2e2",
+    paddingVertical: 10,
+    shadowColor: "lightgrey",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.85,
+    shadowRadius: 2,
+    elevation: 5,
+    borderBottomColor: "lightgrey",
+    borderBottomWidth: 0.5,
+    paddingTop: Platform.OS === "android" ? 50 : 70,
+    paddingHorizontal:20
+  },
+  leftside: {
+    gap: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    // marginHorizontal: 20,
+  },
+  pageName: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color:"#fff"
   },
 
   tab: {
@@ -509,11 +416,11 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   topPartHead: {
-    backgroundColor: "#fff",
+    backgroundColor: Colors.bg,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 20,
+    paddingVertical: 10,
     shadowColor: "lightgrey",
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.85,
@@ -532,6 +439,7 @@ const styles = StyleSheet.create({
   pageName: {
     fontSize: 20,
     fontWeight: "bold",
+    color:"#fff"
   },
   savedText: {
     flexDirection: "row",
@@ -620,14 +528,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 10,
     padding: 10,
-    marginVertical: 10,
-    shadowColor: "lightgrey",
-    shadowOffset: { width: 0, height: 5 },
+    marginVertical: 4,
+    shadowColor: "lightgray",
+    shadowOffset: { width: 0, height: 0 },
     shadowRadius: 5,
     shadowOpacity: 0.8,
-    elevation: 5,
+    elevation: 2,
     borderWidth: 0.5,
-    borderColor: "lightgrey",
+    borderColor: "#e2e2e2",
   },
   topPartRec: {
     flexDirection: "row",
@@ -635,9 +543,25 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
   },
   imageBg: {
-    borderRadius: 3,
-    borderColor: "lightgrey",
+    borderRadius: 5,
+    height: 50,
+    borderColor: "lightgray",
+    width: "15%",
+    borderWidth: 0.8,
+    // width: 70,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  nameBg: {
+    borderRadius: 10,
+    borderColor: Colors.bg,
     borderWidth: 1,
+    width: "15%",
+    height: 50,
+    paddingVertical: 5,
+    justifyContent: "center",
+    alignItems: "center",
+    // backgroundColor:Colors.bg
   },
   dottedLine: {
     marginVertical: 10,
@@ -652,9 +576,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   compText: {
-    fontWeight: "400",
+    fontWeight: "600",
+    color: "#929090ff",
     fontSize: 14,
-    color: "#0069CB",
   },
   subText: {
     color: "grey",
@@ -703,8 +627,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
   },
-  btsubText: {
-    color: "grey",
+    bottomEnit: {
+    backgroundColor: "#F2F4FA",
+    borderRadius: 5,
+    padding: 5
+  },
+   btsubText: {
+    color: "#929090ff",
     fontWeight: 600,
     fontSize: 13,
   },

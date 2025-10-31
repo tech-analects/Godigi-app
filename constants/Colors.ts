@@ -1,5 +1,7 @@
 export const Colors = {
-  bg:"#0069cb",
+  // bg:"#0069cb57",
+  bg:"#004B88",
+  bgSec: "#FF7401",
   inputbox: {
     borderWidth: 0.095,
     height: 40,
@@ -12,7 +14,7 @@ export const Colors = {
     borderColor: "EDF1F3",
     backgroundColor: "#fff",
     width: "100%",
-    color:"black"
+    color: "black",
   },
   inputlable: {
     color: "#6C7278",

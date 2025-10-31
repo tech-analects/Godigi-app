@@ -21,7 +21,7 @@
   "submit": {
     "production": {
       "android": {
-        "serviceAccountKeyPath": "./keys/godigi-infotech-b990a49e1109.json"
+        "serviceAccountKeyPath": "./keys/godigi-infotech-8e266d86f408.json"
       }
     }
   }

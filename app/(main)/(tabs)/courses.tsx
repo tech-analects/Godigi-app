@@ -4,13 +4,15 @@ import { ImagesPath } from "@/constants/ImagesPath";
 import {
   AntDesign,
   Entypo,
+  Feather,
   FontAwesome,
   FontAwesome5,
 } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect, useIsFocused, useNavigation, useRoute } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
-import {  ActivityIndicator, FlatList, Image, Pressable, TouchableOpacity } from "react-native";
+import React, { useCallback, useEffect, useState } from "react";
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, TextInput, TouchableOpacity } from "react-native";
 import { StyleSheet, Text, View } from "react-native";
 import Animated, {
   FadeIn,
@@ -18,156 +20,408 @@ import Animated, {
   FadeInRight,
   FadeInUp,
 } from "react-native-reanimated";
+import { Image } from 'expo-image';
 
 function Application() {
 
 
-  const [coursesArray,setCoursesArray] = useState([]);
+  const [coursesArray, setCoursesArray] = useState([]);
+  const [allCourses, setAllCourses] = useState([]);
+  const [myCoursesArray, setMyCoursesArray] = useState([]);
+  const [allMyCourses, setAllMyCourses] = useState([]);
 
- const mycoursesArray = [
-   {
-     id: 1,
-     name: "React Native",
-     type: "Mobile Development",
-     description: "Learn to build powerful mobile apps using React Native.",
-     enrolled: 1200,
-     price: "$49.99",
-     rating: 4.7,
-     status: "Pending",
-     image:
-       "https://images.unsplash.com/photo-1605379399642-870262d3d051?auto=format&fit=crop&w=800&q=80",
-   },
-   {
-     id: 2,
-     name: "JavaScript Mastery",
-     type: "Web Development",
-     description: "Master modern JavaScript from the ground up.",
-     enrolled: 2500,
-     price: "$39.99",
-     rating: 4.6,
-     status: "Completed",
-     image:
-       "https://images.unsplash.com/photo-1605379399642-870262d3d051?auto=format&fit=crop&w=800&q=80",
-   },
- ];
+
 
 
   const router = useRouter();
 
+  const route = useRoute();
+
   const goToCourseDetails = (id) => {
-    console.log("hello");
     router.push({
-      pathname:'/buyCourse',
-      params:{id:id}
+      pathname: '/buyCourse',
+      params: { id: id }
     });
   };
 
-  const [loadingData,setLoadingData] = useState(false)
+  const goToChatScreen = (id) => {
+    router.push({
+      pathname: '/chatbot',
+      params: { courseId: id }
+    })
+  }
 
-  useEffect(()=>{
-    getCoursesListing();
-  },[])
+  const goToMyCourseDetails = (id) => {
+    router.push({
+      pathname: '/purchasedCourse',
+      params: { id: id }
+    });
+  };
 
-   const getCoursesListing = async () => {
-     try {
-         setLoadingData(true);
-       let formData = new FormData();
-       const token = await AsyncStorage.getItem("logged_in_user_token");
-       formData.append("token", token);
+  const [loadingData, setLoadingData] = useState(false)
 
-       console.log(formData);
-       const response = await apiInstance.post(`course/list`, formData, {
-         headers: { "Content-Type": "multipart/form-data" },
-       });
 
-       console.log("response of data", response.data);
-       if(response.data.status){
-          setCoursesArray(response.data.data)
-       }
-       
-     } catch (error) {
-       console.log("this is err form adlist", error);
-     } finally {
-       setLoadingData(false);
-     }
-   };
+  const getCoursesListing = async () => {
+    try {
+      setLoadingData(true);
+      let formData = new FormData();
+      const token = await AsyncStorage.getItem("logged_in_user_token");
+      formData.append("token", token);
+
+      // console.log(formData);
+      const response = await apiInstance.post(`course/list`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      // console.log("response of data", response.data);
+      if (response.data.status) {
+        setCoursesArray(response.data.data)
+        setAllCourses(response.data.data)
+      }
+
+    } catch (error) {
+      console.log("this is err form adlist", error);
+    } finally {
+      setLoadingData(false);
+    }
+  };
+
+  const getMyCoursesListing = async () => {
+    try {
+      setLoadingData(true);
+      let formData = new FormData();
+      const token = await AsyncStorage.getItem("logged_in_user_token");
+      formData.append("token", token);
+
+      const response = await apiInstance.post(`my-courses/list`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      if (response.data.status) {
+        setMyCoursesArray(response.data.data)
+        setAllMyCourses(response.data.data)
+      }
+
+    } catch (error) {
+      console.log("this is err form adlist", error);
+    } finally {
+      setLoadingData(false);
+    }
+  };
 
   const prfBasedJobItem = ({ item }) => {
     let newUrl = `https://godigiinfotech.com/${item.url}`;
     // console.log(newUrl)
-    return(
-      <TouchableOpacity style={styles.basedJob} onPress={()=>goToCourseDetails(item.id)}>
-      <Image
-        source={{uri:newUrl}}
-        style={{
-          width: "30%",
-          height: 100,
-          borderRadius: 10,
-        }}
-      />
-      <View
-        style={{
-          padding: 10,
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          gap: 4,
-        }}
+    return (
+      <TouchableOpacity
+        style={styles.basedJob}
+        onPress={() => goToCourseDetails(item.id)}
+      // onPress={() => goToChatScreen(item.id)}
       >
-        <Text style={styles.typeCourses}>{item.type || "FullStack Dev"}</Text>
-        <Text style={styles.courseName}>{item.title}</Text>
-        <View style={styles.priceView}>
-          <FontAwesome
-            name="rupee"
-            size={16}
-            color={Colors.bg}
-          />
-          <Text style={styles.coursePrice}>{item.price}</Text>
+        <View style={{ width: "35%", justifyContent: 'center' }}>
+          {
+            item.url == null
+              ?
+              <Image
+                source={ImagesPath.cDummy}
+                contentFit="fill"
+                style={{
+                  width: "100%",
+                  height: 110,
+                  // objectFit:"fill",
+                  borderRadius: 15,
+                }}
+                transition={1000}
+              />
+              :
+              <Image
+                source={{ uri: newUrl }}
+                contentFit="fill"
+                style={{
+                  width: "100%",
+                  height: 110,
+                  borderRadius: 15,
+                }}
+                transition={1000}
+              />
+          }
         </View>
-      </View>
-    </TouchableOpacity>
-    )
+
+        <View
+          style={{
+            padding: 10,
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            gap: 4,
+            width: '65%'
+          }}
+        >
+          <View style={{ flexDirection: "row", gap: 2 }}>
+            <Feather name="bar-chart" size={16} color={Colors.bg} />
+            <Text style={styles.levelText}>{item.level || "Basic"} Level</Text>
+          </View>
+          {/* <Text style={styles.typeCourses}>{item.type || "FullStack Dev"}</Text> */}
+          <Text
+            style={styles.courseName}
+            numberOfLines={2}
+            ellipsizeMode="tail"
+          >
+            {item.title}
+          </Text>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              // width: "75%",
+            }}
+          >
+            <View style={{ flexDirection: "row", width: "100%", gap: 10, justifyContent: 'space-between' }}>
+              <View style={{ flexDirection: "row", gap: 10, }}>
+                <View
+                  style={{
+                    justifyContent: "center",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 2,
+                  }}
+                >
+                  <FontAwesome name="rupee" size={14} color={"#000"} />
+                  <Text style={styles.coursesName}>
+                    {Number(item?.price?.split(".")[0]).toLocaleString()}
+                  </Text>
+
+                </View>
+                <View
+                  style={{
+                    justifyContent: "center",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    width: 60
+                  }}
+                >
+                  <FontAwesome name="rupee" size={12} color={"#929090ff"} />
+                  <Text style={styles.mrpName}>
+                    {item.mrp
+                      ? Number(item.mrp.toString().split(".")[0]).toLocaleString()
+                      : "NA"}
+                  </Text>
+
+                  <View style={styles.lineThrough}></View>
+                </View>
+              </View>
+              <View style={styles.timeCont}>
+                <FontAwesome name="clock-o" size={16} color={Colors.bg} />
+                <Text style={styles.levelText}>
+                  {item.video_duration || "NA"}
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      </TouchableOpacity>
+    );
   }
 
-  const myCourseItem = ({ item }) => (
-    <TouchableOpacity style={styles.basedJob} >
-      <Image
-        src={item.image}
-        style={{
-          width: "30%",
-          height: 100,
-          borderRadius: 10,
-        }}
-      />
-      <View
-        style={{
-          padding: 10,
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          gap: 4,
-        }}
+  const myCourseItem = ({ item }) => {
+    let newUrl = `https://godigiinfotech.com/${item.url}`;
+    // console.log(newUrl)
+    return (
+      <TouchableOpacity
+        style={styles.basedJob}
+        onPress={() => goToMyCourseDetails(item.id)}
       >
-        <Text style={styles.typeCourses}>FullStack dev</Text>
-        <Text style={styles.courseName}>{item.name}</Text>
-        <Text
-          style={[
-            styles.courseStat,
-            {
-              color: item.status == "Pending" ? "orange" : "green",
-              backgroundColor:
-                item.status == "Pending"
-                  ? "rgba(255, 165, 0, 0.2)"
-                  : "rgba(0, 128, 0, 0.2)",
-            },
-          ]}
+        <View style={{ width: "35%", justifyContent: 'center' }}>
+          {
+            item.url == null
+              ?
+              <Image
+                source={ImagesPath.cDummy}
+                contentFit="fill"
+                style={{
+                  width: "100%",
+                  height: 110,
+                  // objectFit:"fill",
+                  borderRadius: 15,
+                }}
+                transition={1000}
+              />
+              :
+              <Image
+                source={{ uri: newUrl }}
+                contentFit="fill"
+                style={{
+                  width: "100%",
+                  height: 110,
+                  borderRadius: 15,
+                }}
+                transition={1000}
+              />
+          }
+        </View>
+
+        <View
+          style={{
+            padding: 10,
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            gap: 4,
+            width: '65%'
+          }}
         >
-          {item.status}
-        </Text>
-      </View>
-    </TouchableOpacity>
-  );
+          <View style={{ flexDirection: "row", gap: 2 }}>
+            <Feather name="bar-chart" size={16} color={Colors.bg} />
+            <Text style={styles.levelText}>{item.level || "Basic"} Level</Text>
+          </View>
+          {/* <Text style={styles.typeCourses}>{item.type || "FullStack Dev"}</Text> */}
+          <Text
+            style={styles.courseName}
+            numberOfLines={2}
+            ellipsizeMode="tail"
+          >
+            {item.title}
+          </Text>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              // width: "75%",
+            }}
+          >
+            <View style={{ flexDirection: "row", width: "100%", gap: 10, justifyContent: 'space-between' }}>
+              <View style={{ flexDirection: "row", gap: 10, }}>
+                {/* <View
+                  style={{
+                    justifyContent: "center",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 2,
+                  }}
+                >
+                  <FontAwesome name="rupee" size={14} color={"#000"} />
+                  <Text style={styles.coursesName}>{item?.price?.split(".")[0]}</Text>
+                </View>
+                <View
+                  style={{
+                    justifyContent: "center",
+                    flexDirection: "row",
+                    alignItems: "center",
+                  }}
+                >
+                  <FontAwesome name="rupee" size={12} color={"#929090ff"} />
+                  <Text style={styles.mrpName}>{item?.mrp?.split(".")[0] || "NA"}</Text>
+                  <View style={styles.lineThrough}></View>
+                </View> */}
+              </View>
+              <View style={styles.timeCont}>
+                <FontAwesome name="clock-o" size={16} color={Colors.bg} />
+                <Text style={styles.levelText}>
+                  {item.video_duration || "NA"}
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      </TouchableOpacity>
+    );
+  }
+
+
 
   const [isFilterViewOpen, setIsFilterViewOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("Courses");
+
+  //  useEffect(() => {
+  //   if (route?.params?.my) {
+  //     setActiveTab("My Courses");
+  //   } else {
+  //     setActiveTab("Courses");
+  //   }
+  // }, [route?.params?.my]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (route?.params?.my) {
+        setActiveTab("My Courses");
+      } else {
+        setActiveTab("Courses");
+      }
+    }, [route?.params?.my])
+  );
+
+
+
+  const [refreshing, setRefreshing] = useState(false);
+
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    if (activeTab == "Courses") {
+      await getCoursesListing();
+    }
+    else {
+      await getMyCoursesListing();
+    }
+    setRefreshing(false);
+  };
+
+  const filterCourses = () => {
+    if (activeTab == "Courses") {
+      if (searchQuery.trim().length > 0) {
+        const filtered = allCourses.filter(c =>
+          c.title.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+        setCoursesArray(filtered);
+      } else {
+        setCoursesArray(allCourses); // Reset to original list
+      }
+    }
+    else {
+      if (searchQuery.trim().length > 0) {
+        const filtered = allMyCourses.filter(c =>
+          c.title.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+        setMyCoursesArray(filtered);
+      } else {
+        setMyCoursesArray(allMyCourses); // Reset to original list
+      }
+    }
+  };
+
+  //  useEffect(()=>{
+  //   filterCourses();
+  //  },[searchQuery])
+
+
+  useEffect(() => {
+    if (activeTab == 'Courses') {
+      getCoursesListing();
+    }
+    else {
+      getMyCoursesListing();
+    }
+    // console.log('hello')
+  }, [activeTab])
+
+  const navigation = useNavigation();
+
+  const isFocused = useIsFocused(); // ✅ to track current focus
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("tabPress", (e) => {
+      if (isFocused) {
+        if (activeTab == "Courses") {
+          getCoursesListing();
+        }
+        else {
+          getMyCoursesListing();
+        }
+        // setActiveTab("Courses");
+      }
+    });
+
+    return unsubscribe;
+  }, [navigation, isFocused,activeTab]);
 
   return (
     <View style={styles.bgMain}>
@@ -180,7 +434,7 @@ function Application() {
               style={[
                 styles.tab,
                 isActive && {
-                  backgroundColor: "#0069cb",
+                  backgroundColor: Colors.bg,
                   borderRadius: 15,
                   // borderTopLeftRadius: item === "My Courses" ? 15 : 0,
                   // borderBottomLeftRadius: item === "My Courses" ? 15 : 0,
@@ -203,83 +457,139 @@ function Application() {
         })}
       </View>
 
-        {
-          loadingData
+      <View style={styles.topPart1}>
+        <View style={styles.inputBg}>
+
+          <TextInput
+            placeholder="Search Courses"
+            value={searchQuery}
+            onChangeText={(text) => setSearchQuery(text)}
+            placeholderTextColor="#929090ff"
+            autoComplete="off"
+            style={[
+              Colors.inputbox,
+              {
+                backgroundColor: "white",
+                borderColor: "#fff",
+                borderRadius: 10,
+                elevation: 2,
+                shadowColor: "lightgray",
+                shadowOffset: { width: 0, height: 0 },
+                shadowRadius: 5,
+                shadowOpacity: 0.8,
+                borderWidth: 0.5,
+                paddingLeft: 40,
+                borderColor: "#e2e2e2",
+              },
+            ]}
+            returnKeyType="search"   // Shows "Search" button on the keyboard
+            blurOnSubmit={false}     // Keeps input focused if you want
+            onSubmitEditing={() => {
+              // ✅ This will run when Enter/Search/Done is pressed
+              // console.log("Search submitted:", searchQuery);
+              filterCourses(); // <-- your method
+            }}
+          />
+
+          <Feather name="search" size={22} color="#929090ff" style={{ position: "absolute", left: 10 }} />
+          {
+            searchQuery.length > 0
+            &&
+            <Entypo name="cross" size={24} color="#929090ff" style={{ position: "absolute", right: 10 }} onPress={() => {
+              setSearchQuery("");
+              setCoursesArray(allCourses); // Reset instantly
+            }}
+            />
+          }
+        </View>
+        {/* <View style={styles.filterBg}>
+                        <Ionicons name="options-outline" size={24} color="#fff" />
+                      </View> */}
+      </View>
+
+      {
+        loadingData
           ?
-          <ActivityIndicator style={{marginTop:50}}/>
+          <ActivityIndicator style={{ marginTop: 50 }} />
           :
 
-      <Animated.View entering={FadeInDown.duration(500)} style={{paddingHorizontal:20}}>
-        {activeTab == "Courses" ? (
-          <FlatList
-            data={coursesArray}
-            showsVerticalScrollIndicator={false}
-            // numColumns={2}
-            renderItem={prfBasedJobItem}
-            keyExtractor={(item) => item.id.toString()}
-            style={styles.jobCont}
-            // columnWrapperStyle={{
-            //   justifyContent: "space-between",
-            // }}
-            scrollEnabled={true}
-            contentContainerStyle={{ paddingBottom: 50 }}
-            ListEmptyComponent={() => {
-            return (
-              <View
-                style={{
-                  justifyContent: "center",
-                  padding: 10,
+          <Animated.View entering={FadeInDown.duration(500)} style={{ paddingHorizontal: 20 }}>
+            {activeTab == "Courses" ? (
+              <FlatList
+                data={coursesArray}
+                showsVerticalScrollIndicator={false}
+                // numColumns={2}
+                renderItem={prfBasedJobItem}
+                keyExtractor={(item) => item.id.toString()}
+                style={styles.jobCont}
+                // columnWrapperStyle={{
+                //   justifyContent: "space-between",
+                // }}
+                refreshControl={
+                  <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                }
+                scrollEnabled={true}
+                contentContainerStyle={{ paddingBottom: 200, }}
+                ListEmptyComponent={() => {
+                  return (
+                    <View
+                      style={{
+                        justifyContent: "center",
+                        padding: 10,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: "gray",
+                          fontWeight: 600,
+                          textAlign: "center",
+                          marginTop: 50,
+                        }}
+                      >
+                        No Courses found!
+                      </Text>
+                    </View>
+                  );
                 }}
-              >
-                <Text
-                  style={{
-                    color: "gray",
-                    fontWeight: 600,
-                    textAlign: "center",
-                    marginTop: 50,
-                  }}
-                >
-                  No Courses found!
-                </Text>
-              </View>
-            );
-          }}
-          />
-        ) : (
-          // <Text style={{marginTop:100,color:"gray",textAlign:'center'}}>No Completed Courses !</Text>
-          <FlatList
-            data={[]}
-            showsVerticalScrollIndicator={false}
-            renderItem={myCourseItem}
-            keyExtractor={(item) => item.id.toString()}
-            style={styles.jobCont}
-            scrollEnabled={true}
-            contentContainerStyle={{ paddingBottom: 50 }}
-            ListEmptyComponent={() => {
-            return (
-              <View
-                style={{
-                  justifyContent: "center",
-                  padding: 10,
+              />
+            ) : (
+              // <Text style={{marginTop:100,color:"gray",textAlign:'center'}}>No Completed Courses !</Text>
+              <FlatList
+                data={myCoursesArray}
+                showsVerticalScrollIndicator={false}
+                renderItem={myCourseItem}
+                keyExtractor={(item) => item.id.toString()}
+                style={styles.jobCont}
+                scrollEnabled={true}
+                refreshControl={
+                  <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                }
+                contentContainerStyle={{ paddingBottom: 50 }}
+                ListEmptyComponent={() => {
+                  return (
+                    <View
+                      style={{
+                        justifyContent: "center",
+                        padding: 10,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: "gray",
+                          fontWeight: 600,
+                          textAlign: "center",
+                          marginTop: 50,
+                        }}
+                      >
+                        No Courses purchased yet!
+                      </Text>
+                    </View>
+                  );
                 }}
-              >
-                <Text
-                  style={{
-                    color: "gray",
-                    fontWeight: 600,
-                    textAlign: "center",
-                    marginTop: 50,
-                  }}
-                >
-                  No Courses purchased yet!
-                </Text>
-              </View>
-            );
-          }}
-          />
-        )}
-      </Animated.View>
-        }
+              />
+            )}
+          </Animated.View>
+      }
 
       {isFilterViewOpen && (
         <View style={styles.filterView}>
@@ -315,11 +625,48 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     textAlign: "center",
   },
+  levelText: {
+    fontSize: 10,
+    fontWeight: 600,
+    marginVertical: 3,
+    color: Colors.bg,
+  },
+  timeCont: {
+    borderRadius: 5,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 2,
+  },
   coursePrice: {
     fontWeight: 700,
     fontSize: 13,
     textAlign: "right",
     color: Colors.bg,
+  },
+  coursesName: {
+    fontSize: 14,
+    fontWeight: 800,
+    marginVertical: 3,
+    color: "black",
+  },
+  mrpName: {
+    fontSize: 12,
+    fontWeight: 600,
+    marginVertical: 3,
+    color: "#929090ff",
+    // width:60,
+    textAlign: 'center'
+  },
+  lineThrough: {
+    // maxWidth:30,
+    width: 60,
+    height: 2,
+    backgroundColor: "#929090ff",
+    position: "absolute",
+    // transform: [{ rotate: "-20deg" }],
+    left: 0,
+    bottom: 11,
   },
   priceView: {
     flexDirection: "row",
@@ -350,6 +697,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#e2e2e2",
   },
+  inputBg: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 10,
+    width: '100%',
+    flexDirection: "row"
+  },
+  topPart1: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    marginTop: 10
+  },
 
   tab: {
     backgroundColor: "white",
@@ -368,15 +728,17 @@ const styles = StyleSheet.create({
 
   courseName: {
     fontWeight: 600,
-    fontSize: 15,
+    fontSize: 16,
+    width: "100%",
+    color: "black",
   },
   trainerName: {
     fontWeight: 600,
     fontSize: 11,
-    color:"gray"
+    color: "gray",
   },
   bgMain: {
-    backgroundColor: "#fafafd",
+    backgroundColor: "#F2F2F2",
     flex: 1,
     // paddingHorizontal: 20,
     paddingVertical: 10,
@@ -488,19 +850,21 @@ const styles = StyleSheet.create({
   basedJob: {
     backgroundColor: "#fff",
     width: "100%",
-    gap:5,
+    padding: 5,
+    height: 120,
+    gap: 5,
     flexDirection: "row",
+    justifyContent: 'flex-start',
     // height: 180,
-    borderRadius: 10,
-    marginVertical: 10,
-    borderWidth: 0.5,
-    borderColor: "lightgrey",
-    padding: 10,
-    elevation: 3,
-    shadowColor: "gray",
-    shadowOpacity: 1,
+    borderRadius: 15,
+    marginVertical: 3,
+    shadowColor: "lightgray",
+    shadowOffset: { width: 0, height: 0 },
     shadowRadius: 5,
-    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.8,
+    elevation: 2,
+    borderWidth: 0.5,
+    borderColor: "#e2e2e2",
   },
   topPartRec: {
     flexDirection: "row",

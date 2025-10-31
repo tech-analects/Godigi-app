@@ -137,8 +137,8 @@ function ResetPassword() {
 
   return (
     <View style={styles.bgMain}>
-      <TouchableOpacity onPress={goBack} style={{marginTop:20}}>
-        <AntDesign name="arrowleft" size={24} color="black" />
+      <TouchableOpacity onPress={goBack} style={{marginTop:40}}>
+          <Feather name="arrow-left" size={24} color="black" />
       </TouchableOpacity>
       <View style={styles.main}>
         <View style={styles.topPart}>
@@ -161,6 +161,7 @@ function ResetPassword() {
                 setErr("");
               }}
               secureTextEntry={passwordShow}
+              placeholderTextColor={"gray"}
             />
             <TouchableOpacity
               style={{ position: "absolute", right: 15, top: "60%" }}
@@ -185,6 +186,7 @@ function ResetPassword() {
                 setErr("");
               }}
               secureTextEntry={confirmPasswordShow}
+              placeholderTextColor={"gray"}
             />
             <TouchableOpacity
               style={{ position: "absolute", right: 15, top: "60%" }}

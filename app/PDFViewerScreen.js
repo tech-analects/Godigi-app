@@ -5,13 +5,16 @@ import {
   Platform,
   ActivityIndicator,
   Text,
+  StatusBar,
 } from "react-native";
 import { WebView } from "react-native-webview";
 import * as ScreenCapture from "expo-screen-capture";
 import apiInstance from "./interceptors";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { AntDesign } from "@expo/vector-icons";
+import { Colors } from "@/constants/Colors";
+import { AntDesign, Feather, Fontisto } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 
 export default function PDFViewerScreen() {
   const routes = useRoute();
@@ -79,32 +82,39 @@ export default function PDFViewerScreen() {
 
   const navigation = useNavigation();
   const goBack = () => {
+    if (navigation.canGoBack()) {
+      console.log("can go back",navigation.canGoBack())
     navigation.goBack();
+  } else {
+    navigation.replace("/"); // fallback
+  }
   };
 
+  const router = useRouter();
+
+  const goToNotifications=()=>{
+    router.push("/notifications")
+  }
+
   return (
+     <>
+     
+     <StatusBar barStyle="light-content" backgroundColor={Colors.bg} />
     <View style={styles.container}>
       {loading ? (
         <ActivityIndicator style={{ marginTop: 50 }} />
       ) : (
-        <View style={{ padding: 10, flex: 1 }}>
-          <View style={styles.topPart}>
-            <View style={styles.leftside}>
-              <AntDesign
-                name="arrowleft"
-                size={24}
-                color="black"
-                onPress={goBack}
-              />
-              <Text
-                style={styles.pageName}
-                numberOfLines={1}
-                ellipsizeMode="tail"
-              >
-                {subName}
-              </Text>
-            </View>
+        <View style={{flex: 1 }}>
+         <View style={styles.topPart}>
+         <Feather name="arrow-left" size={24} 
+                     color="#fff"
+                     onPress={goBack}
+                   />
+          <Text style={styles.pageName} numberOfLines={1} ellipsizeMode="tail">{subName}</Text>
+          <View>
+            {/* <Fontisto name="bell" size={22} color="#fff" onPress={goToNotifications}/> */}
           </View>
+      </View>
 
           <WebView
             originWhitelist={["*"]}
@@ -121,6 +131,7 @@ export default function PDFViewerScreen() {
                       font-size: 15px;
                       line-height: 1.6;
                       color: #333;
+                      background-color:#F2F2F2;
                     }
                     p { margin: 0 0 12px; }
                     #noData { text-align:center; margin-top:200px; color:gray }
@@ -141,40 +152,38 @@ export default function PDFViewerScreen() {
         </View>
       )}
     </View>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: Colors.bg,
     paddingTop: Platform.OS === "android" ? 25 : 0,
   },
-  topPart: {
-    backgroundColor: "#fff",
+    topPart: {
+    backgroundColor: Colors.bg,
+    // backgroundColor: "red",
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingVertical: 10,
-    shadowColor: "lightgrey",
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.85,
-    shadowRadius: 2,
-    elevation: 5,
-    borderBottomColor: "lightgrey",
-    borderBottomWidth: 0.5,
-    // paddingTop: Platform.OS === "android" ? 50 : 50,
+   
+    paddingTop: Platform.OS === "android" ? 30 : 70,
+    paddingHorizontal:20
   },
   leftside: {
     gap: 10,
     flexDirection: "row",
     alignItems: "center",
-    marginHorizontal: 20,
+    // marginHorizontal: 20,
   },
   pageName: {
     fontSize: 20,
     fontWeight: "bold",
-    color:"black",
-    width:"80%"
+    color:"#fff",
+    width:"60%",
+    textAlign:'center'
   },
 });

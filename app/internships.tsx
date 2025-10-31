@@ -9,15 +9,16 @@ import {
   Platform,
   FlatList,
   ActivityIndicator,
-  Image,
   RefreshControl,
 } from "react-native";
-import { AntDesign, FontAwesome, Ionicons } from "@expo/vector-icons";
+import { AntDesign, Feather, FontAwesome, Fontisto, Ionicons } from "@expo/vector-icons";
 import ThemeBtn from "@/components/ThemeBtn";
-import { useNavigation } from "expo-router";
+import { useNavigation, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import apiInstance from "./interceptors";
 import { Colors } from "@/constants/Colors";
+import { ImagesPath } from "@/constants/ImagesPath";
+import { Image } from 'expo-image';
 
 export default function Internships() {
 
@@ -29,10 +30,19 @@ export default function Internships() {
   const goBack = () => {
     navigation.goBack();
   };
+  const router = useRouter();
+  
+    const goToNotifications=()=>{
+      router.push("/notifications")
+    }
 
   const goToInternshipDetails=(id)=>{
     console.log(id)
-    navigation.navigate('internshipDetails',{id:id})
+    // navigation.navigate('internshipDetails',{id:id})
+    router.push({
+      pathname:"/applyJobs",
+       params: { id: id,prf:"Internship" },
+    })
   }
 
   
@@ -133,19 +143,40 @@ export default function Internships() {
     getIntershipListing(newStart);
   };
 
-  const myInternshipItem = ({ item }) => (
+  const myInternshipItem = ({ item }) => {
+      let newUrl = `https://godigiinfotech.com/${item.url}`;
+    return(
     <TouchableOpacity
       style={styles.basedJob}
       onPress={() => goToInternshipDetails(item.id)}
     >
-      <Image
-        src={item.image}
-        style={{
-          width: "30%",
-          height: 100,
-          borderRadius: 10,
-        }}
-      />
+       <View style={{width:"35%",justifyContent:'center'}}>
+      {
+                item.url == null
+                ?
+                <Image
+                  source={ImagesPath.iDummy}
+                  style={{
+                    width: "100%",
+                    height: 100,
+                    borderRadius: 10,
+                  }}
+                   contentFit="fill"
+             transition={1000}
+                  />
+                  :
+                  <Image
+                  source={{ uri: newUrl }}
+                  style={{
+                    width: "100%",
+                    height: 100,
+                  borderRadius: 15,
+                }}
+                 contentFit="fill"
+             transition={1000}
+              />
+              }
+              </View>
       <View
         style={{
           padding: 10,
@@ -155,7 +186,7 @@ export default function Internships() {
         }}
       >
         <Text style={styles.typeCourses}>{item.company_name}</Text>
-        <Text style={styles.courseName}>{item.title}</Text>
+        <Text style={styles.courseName} numberOfLines={1} ellipsizeMode="tail">{item.title}</Text>
         <View style={styles.priceView}>
           <FontAwesome name="rupee" size={16} color={Colors.bg} />
           <Text style={styles.coursePrice}>{item.salary}</Text>
@@ -176,7 +207,7 @@ export default function Internships() {
         </Text> */}
       </View>
     </TouchableOpacity>
-  );
+  )};
 
   const [refreshing, setRefreshing] = useState(false);
 
@@ -189,15 +220,14 @@ export default function Internships() {
   return (
     <View style={styles.container}>
       <View style={styles.topPart}>
-        <View style={styles.leftside}>
-          <AntDesign
-            name="arrowleft"
-            size={24}
-            color="black"
+         <Feather name="arrow-left" size={24} 
+            color="#fff"
             onPress={goBack}
           />
           <Text style={styles.pageName}>Internships</Text>
-        </View>
+          <View>
+            {/* <Fontisto name="bell" size={22} color="#fff" onPress={goToNotifications}/> */}
+          </View>
       </View>
       {loadingData ? (
         <ActivityIndicator style={{ marginTop: 50 }} />
@@ -255,12 +285,14 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingHorizontal:20,
   },
-  topPart: {
-    backgroundColor: "#fff",
+    topPart: {
+    backgroundColor: Colors.bg,
+       height:100,
+    // backgroundColor: "red",
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 20,
+    paddingVertical: 10,
     shadowColor: "lightgrey",
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.85,
@@ -268,17 +300,19 @@ const styles = StyleSheet.create({
     elevation: 5,
     borderBottomColor: "lightgrey",
     borderBottomWidth: 0.5,
-    paddingTop: Platform.OS === "android" ? 50 : 50,
+    paddingTop: Platform.OS === "android" ? 50 : 70,
+    paddingHorizontal:20
   },
   leftside: {
     gap: 10,
     flexDirection: "row",
     alignItems: "center",
-    marginHorizontal: 20,
+    // marginHorizontal: 20,
   },
   pageName: {
     fontSize: 20,
     fontWeight: "bold",
+    color:"#fff"
   },
   basedJob: {
     backgroundColor: "#fff",
@@ -287,15 +321,21 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     // height: 180,
     borderRadius: 10,
-    marginVertical: 10,
+    marginVertical: 2,
     borderWidth: 0.5,
     borderColor: "lightgrey",
     padding: 10,
-    elevation: 3,
-    shadowColor: "gray",
-    shadowOpacity: 1,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 2 },
+    // elevation: 3,
+    // shadowColor: "gray",
+    // shadowOpacity: 1,
+    // shadowRadius: 5,
+    // shadowOffset: { width: 0, height: 2 },
+
+      shadowColor: "black",
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: 2,
+    shadowOpacity: 0.12,
+    elevation: 2,
   },
   typeCourses: {
     paddingHorizontal: 8,
@@ -321,6 +361,7 @@ const styles = StyleSheet.create({
   courseName: {
     fontWeight: 600,
     fontSize: 15,
+    width:Platform.OS == "ios" ? 200 : 220,
   },
   trainerName: {
     fontWeight: 600,

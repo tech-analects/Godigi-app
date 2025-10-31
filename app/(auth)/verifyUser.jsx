@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { AntDesign } from "@expo/vector-icons";
+import { AntDesign, Feather } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import OTPTextInput from "react-native-otp-textinput";
 import apiInstance from "../interceptors";
@@ -21,88 +21,102 @@ import usePushToken from "../token";
 function VerifyUser() {
   const [selectedTab, setSelectedTab] = useState("email");
   const navigation = useNavigation();
-  const [err,setErr] = useState("")
+  const [err, setErr] = useState("")
 
   const goBack = () => {
     navigation.goBack();
   };
 
-    const route = useRoute();
-    console.log(route?.params)
-    let otp = route?.params?.otp;
-    let userId = route?.params?.userId;
-    let screen = route?.params?.screen;
-    console.log(screen)
+  const route = useRoute();
+  console.log(route?.params)
+  let otp = route?.params?.otp;
+  let userId = route?.params?.userId;
+  let screen = route?.params?.screen;
+  // console.log(screen)
 
   const goToResetPassword = () => {
-    navigation.navigate("resetPassword",{userId:userId});
+    navigation.navigate("resetPassword", { userId: userId });
   };
 
-   const otpInputRef = useRef(null);
-   const router = useRouter();
-   const [loading,setLoading] = useState(false)
-     const { isLoggedIn, setIsLoggedIn } = useContext(UserContext);
-   
+  const otpInputRef = useRef(null);
+  const router = useRouter();
+  const [loading, setLoading] = useState(false)
+  const { isLoggedIn, setIsLoggedIn } = useContext(UserContext);
 
-//    const handleOTPChange = (otpentered) => {
-//      console.log("OTP Entered:", otpentered);
-//      if (otpentered.length === 4) {
-//        // verify OTP
-//        if (otpentered == otp) {
-//          goToResetPassword();
-//        } else {
-//          console.log("otp dont match");
-//          setErr("OTP does not match.")
-//        }
-//      }
-//    };
 
-const token = usePushToken();
+  //    const handleOTPChange = (otpentered) => {
+  //      console.log("OTP Entered:", otpentered);
+  //      if (otpentered.length === 4) {
+  //        // verify OTP
+  //        if (otpentered == otp) {
+  //          goToResetPassword();
+  //        } else {
+  //          console.log("otp dont match");
+  //          setErr("OTP does not match.")
+  //        }
+  //      }
+  //    };
 
-   const verifyUser = async (otpentered) => {
-     try {
-      if(otpentered.length === 4){
-         setLoading(true);
-       const formdata = new FormData();
-       formdata.append("user_id", userId);
+  const token = usePushToken();
+
+  const {setLoggedInUserName,setLoggedInUserImg} = useContext(UserContext);
+
+  const verifyUser = async (otpentered) => {
+    try {
+      if (otpentered.length === 4) {
+        setLoading(true);
+        const formdata = new FormData();
+        formdata.append("user_id", userId);
         const trimmedToken = token
-        .replace("ExponentPushToken[", "")
-        .replace("]", "");
-      formdata.append("token", trimmedToken);
-       const response = await apiInstance.post("verify-otp", formdata, {
-         headers: { "Content-Type": "multipart/form-data" },
-       });
-       console.log(response.data);
-      if (response.data.status) {
-         let user_token = response.data.token;
-                let user_id = response.data.data.user_id;
-                let user_type = response.data.data.user_type;
-                console.log(user_token,user_id,user_type)
-                await AsyncStorage.setItem("logged_in_user_token", user_token);
-                await AsyncStorage.setItem("logged_in_user_type", user_type);
-                await AsyncStorage.setItem("logged_in_user_id", user_id);
-        setIsLoggedIn(true);
-        router.push("/(tabs)/");
-      } else {
-        setErr(response.data.message);
+          .replace("ExponentPushToken[", "")
+          .replace("]", "");
+        formdata.append("token", trimmedToken);
+        const response = await apiInstance.post("verify-otp", formdata, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        console.log(response.data);
+        if (response.data.status) {
+           setLoggedInUserName(response.data.data.user_name);
+          let user_token = response.data.token;
+          let user_id = response.data.data.user_id;
+          let user_type = response.data.data.user_type;
+          let user_name = response.data.data.user_name;
+          let user_email = response.data.data.user_email;
+           let user_gender = response.data.data.user_gender || "";
+             let user_dob = response.data.data.user_dob || "";
+                let user_img = response.data.data.profile_url || "";
+          console.log(user_token, user_id, user_type)
+          await AsyncStorage.setItem("logged_in_user_token", user_token);
+          await AsyncStorage.setItem("logged_in_user_type", user_type);
+          await AsyncStorage.setItem("logged_in_user_id", user_id);
+          await AsyncStorage.setItem("logged_in_user_name", user_name);
+          await AsyncStorage.setItem("logged_in_user_email", user_email);
+           await AsyncStorage.setItem("logged_in_user_gender", user_gender);
+           await AsyncStorage.setItem("logged_in_user_dob", user_dob);
+             await AsyncStorage.setItem("logged_in_user_img", user_img);
+           
+          const hasLaunched = await AsyncStorage.getItem("hasLaunched");
+          console.log("hasLaunched from login", hasLaunched)
+
+          setIsLoggedIn(true);
+          router.push("/(tabs)/");
+        } else {
+          setErr(response.data.message);
+        }
       }
-      }
-     } catch (error) {
-       setErr(error.message);
-       console.log(error);
-     } finally {
-       setLoading(false);
-     }
-   };
+    } catch (error) {
+      setErr(error.message);
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View style={styles.bgMain}>
-      <AntDesign
-        name="arrowleft"
-        size={24}
-        color="black"
+     <Feather name="arrow-left" size={24} 
         onPress={goBack}
-        style={{ marginTop: 20 }}
+        style={{ marginTop: 40 }}
       />
       <View style={styles.main}>
         <View style={styles.topPart}>

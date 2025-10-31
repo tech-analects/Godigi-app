@@ -9,6 +9,7 @@ import {
   Image,
   Platform,
   TouchableOpacity,
+  KeyboardAvoidingView,
 } from "react-native";
 import {
   Ionicons,
@@ -18,15 +19,16 @@ import {
   FontAwesome,
   MaterialIcons,
   Feather,
+  Fontisto,
 } from "@expo/vector-icons";
 import ThemeBtn from "@/components/ThemeBtn";
-import * as DocumentPicker from "expo-document-picker";
 import { Colors } from "@/constants/Colors";
 import { ImagesPath } from "@/constants/ImagesPath";
 import { useNavigation } from "@react-navigation/native";
 import { BASE_URL } from "@/urlPath";
 import apiInstance from "./interceptors";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
 
 function ChnagePassForm() {
   const [bottomSheetVisible, setBottomSheetVisible] = useState(false);
@@ -128,14 +130,30 @@ function ChnagePassForm() {
     }
   };
 
+  const router = useRouter();
+
+  const goToNotifications=()=>{
+    router.push("/notifications")
+  }
+
   return (
     <View style={styles.container}>
-         <View style={styles.topPart}>
-                <AntDesign name="arrowleft" size={24} color="black" onPress={goBack} />
-                <Text style={styles.pageName}>Change Password</Text>
-              </View>
+       <View style={styles.topPart}>
+         <Feather name="arrow-left" size={24} color={"#fff"}
+            onPress={goBack}
+          />
+          <Text style={styles.pageName}>Change Password</Text>
+          <View>
+            {/* <Fontisto name="bell" size={22} color="#fff" onPress={goToNotifications}/> */}
+          </View>
+      </View>
 
-      <ScrollView style={styles.formContainer}>
+       <KeyboardAvoidingView
+    style={{ flex: 1 }}
+    behavior={Platform.OS === "ios" ? "padding" : "height"} // height works better on Android
+    keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0} // adjust based on header height
+  >
+     <View style={{ flex: 1, padding: 20, }}>
 
        <View style={styles.field}>
                    <Text style={Colors.inputlable}>Password</Text>
@@ -209,12 +227,17 @@ function ChnagePassForm() {
                      There is an error changing your password right now.
                    </Text>
                  )}
-      </ScrollView>
-
-      {/* Positioned Button at the Bottom */}
       <View style={styles.buttonContainer}>
         <ThemeBtn btnTitle={"Change Password"} onPress={changePass} loadingBtn={loading} />
       </View>
+     </View>
+  </KeyboardAvoidingView>
+
+      {/* <ScrollView style={styles.formContainer}>
+
+      </ScrollView> */}
+
+      {/* Positioned Button at the Bottom */}
       {successModal}
     </View>
   );
@@ -223,7 +246,7 @@ function ChnagePassForm() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FAFAFD",
+    backgroundColor: "#F2F2F2",
   },
    errText: {
     color: "red",
@@ -234,25 +257,34 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 80, // Make space for the button
   },
-  pageName: {
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-  topPart: {
-    backgroundColor: "#fff",
+    topPart: {
+    backgroundColor: Colors.bg,
+       height:100,
+    // backgroundColor: "red",
     flexDirection: "row",
-    gap: 10,
-    paddingHorizontal: 20,
+    justifyContent: "space-between",
     alignItems: "center",
-    paddingBottom: 20,
-    paddingTop: Platform.OS == "android" ? 50 : 860,
-    shadowColor: "grey",
-    shadowOffset: { width: 0, height: 1 },
+    paddingVertical: 10,
+    shadowColor: "lightgrey",
+    shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.85,
-    shadowRadius: 5,
+    shadowRadius: 2,
     elevation: 5,
     borderBottomColor: "lightgrey",
     borderBottomWidth: 0.5,
+    paddingTop: Platform.OS === "android" ? 50 : 70,
+    paddingHorizontal:20
+  },
+  leftside: {
+    gap: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    // marginHorizontal: 20,
+  },
+  pageName: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color:"#fff"
   },
   heading: {
     fontSize: 20,

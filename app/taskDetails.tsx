@@ -11,7 +11,6 @@ import {
 } from "react-native";
 import { Ionicons, MaterialIcons, Feather, AntDesign } from "@expo/vector-icons";
 import { WebView } from "react-native-webview";
-import * as DocumentPicker from "expo-document-picker";
 import { useNavigation } from "expo-router";
 
 export default function TaskDetails() {

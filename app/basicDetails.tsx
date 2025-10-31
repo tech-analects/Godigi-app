@@ -26,8 +26,15 @@ function BasicDetailsForm() {
   return (
     <View style={styles.bgMain}>
       <View style={styles.topPart}>
-        <AntDesign name="arrowleft" size={24} color="black" onPress={goBack} />
-        <Text style={styles.pageName}>Basic Details</Text>
+        <View style={styles.leftside}>
+          <AntDesign
+            name="arrowleft"
+            size={24}
+            color="#fff"
+            onPress={goBack}
+          />
+          <Text style={styles.pageName}>Basic Details</Text>
+        </View>
       </View>
       <ScrollView style={styles.form}>
         <View style={styles.field}>
@@ -74,16 +81,16 @@ function BasicDetailsForm() {
         </View>
         
       </ScrollView>
-      <View style={styles.nextButton}>
+      {/* <View style={styles.nextButton}>
         <ThemeBtn btnTitle={"Update"} onPress={goBack} />
-      </View>
+      </View> */}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   bgMain: {
-    backgroundColor: "#fafafd",
+    backgroundColor: "#F2F2F2",
     flex: 1,
   },
   nextButton: {
@@ -123,25 +130,31 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     backgroundColor: "#fff",
   },
-  pageName: {
-    fontSize: 20,
-    fontWeight: "bold",
-  },
   topPart: {
-    backgroundColor: "#fff",
+    backgroundColor: Colors.bg,
     flexDirection: "row",
-    gap: 10,
-    paddingHorizontal: 20,
+    justifyContent: "space-between",
     alignItems: "center",
-    paddingBottom: 20,
-    paddingTop: Platform.OS == "android" ? 50 : 60,
-    shadowColor: "grey",
-    shadowOffset: { width: 0, height: 1 },
+    paddingVertical: 10,
+    shadowColor: "lightgrey",
+    shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.85,
-    shadowRadius: 5,
+    shadowRadius: 2,
     elevation: 5,
     borderBottomColor: "lightgrey",
     borderBottomWidth: 0.5,
+    paddingTop: Platform.OS === "android" ? 50 : 50,
+  },
+  leftside: {
+    gap: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    marginHorizontal: 20,
+  },
+  pageName: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color:"#fff"
   },
   inpView: {
     flexDirection: "row",

@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { AntDesign } from "@expo/vector-icons";
+import { AntDesign, Feather } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import OTPTextInput from "react-native-otp-textinput";
 import apiInstance from "../interceptors";
@@ -83,12 +83,9 @@ function VerifyCode() {
 
   return (
     <View style={styles.bgMain}>
-      <AntDesign
-        name="arrowleft"
-        size={24}
-        color="black"
+      <Feather name="arrow-left" size={24}
         onPress={goBack}
-        style={{ marginTop: 20 }}
+        style={{ marginTop: 40 }}
       />
       <View style={styles.main}>
         <View style={styles.topPart}>

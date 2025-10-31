@@ -3,19 +3,21 @@ import { ImagesPath } from "@/constants/ImagesPath";
 import {
   AntDesign,
   Entypo,
+  Feather,
   FontAwesome,
   FontAwesome5,
   Foundation,
+  Ionicons,
 } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation, useRouter } from "expo-router";
 import Animated, { FadeIn, FadeInDown, FadeInRight, FadeInUp } from "react-native-reanimated";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
+import Constants from "expo-constants";
 import {
   ActivityIndicator,
   Dimensions,
   FlatList,
-  Image,
   Platform,
   Pressable,
   RefreshControl,
@@ -31,337 +33,326 @@ import PagerView from "react-native-pager-view";
 import ThemeBtn from "@/components/ThemeBtn";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import apiInstance from "@/app/interceptors";
+import AutoSwiperBanner from "@/app/autoSwiper";
+import { BlurView } from "expo-blur";
+import WebView from "react-native-webview";
+import { useIsFocused } from "@react-navigation/native";
+import { Image } from 'expo-image';
+import { UserContext } from "@/app/UserContext";
 
 const screenWidth = Dimensions.get("window").width
-console.log(screenWidth)
+// console.log(screenWidth)
 
 function Home() {
 
-  const [internshipsData,setInternshipsData] = useState([]);
-  const [examsData,setExamsData] = useState([]);
-  const [notesData,setNotesData] = useState([]);
+  const [internshipsData, setInternshipsData] = useState([]);
+  const [examsData, setExamsData] = useState([]);
+  const [notesData, setNotesData] = useState([]);
   const [interviewQuestionsData, setInterviewQuestionsData] = useState([]);
   const [jobsData, setJobsData] = useState([]);
   const [coursesData, setCoursesData] = useState([]);
   const [bannersData, setBannersData] = useState([]);
+  const [bannersText, setBannersText] = useState();
   const [loadingDashData, setLoadingDashData] = useState(false);
+  const [appVersionOutdated, setAppVersionOutdated] = useState();
 
   // useEffect(()=>{
   //   console.log("thises is state",jobsData)
   // },[jobsData])
 
-  const jobArray = [
-    {
-      id: 1,
-      name: "Jobs",
-    },
-    {
-      id: 2,
-      name: "Courses",
-    },
-    {
-      id: 3,
-      name: "Internships",
-    },
-    {
-      id: 4,
-      name: "Others",
-    },
-  ];
-
-  const recJobArray = [
-    {
-      id: 1,
-      role: "Frontend Developer",
-      company: "Beats",
-      packageRange: "$60,000 - $80,000",
-      rating: 4.5,
-      location: "San Francisco, CA",
-      posted: "5 days ago",
-      type: ["Full Time", "Remote", "Director"],
-    },
-    {
-      id: 2,
-      role: "UX/UI Designer",
-      company: "TCS",
-      packageRange: "$50,000 - $70,000",
-      rating: 4.2,
-      location: "New York, NY",
-      posted: "5 days ago",
-      type: ["Full Time", "Remote", "Director"],
-    },
-    {
-      id: 3,
-      role: "Marketing Manager",
-      company: "TCS",
-      packageRange: "$70,000 - $90,000",
-      rating: 4.7,
-      location: "Los Angeles, CA",
-      posted: "5 days ago",
-      type: ["Full Time", "Remote", "Director"],
-    },
-    {
-      id: 4,
-      role: "Backend Developer",
-      company: "Innovators",
-      packageRange: "$80,000 - $100,000",
-      rating: 4.6,
-      location: "Austin, TX",
-      posted: "5 days ago",
-      type: ["Full Time", "Remote", "Director"],
-    },
-    {
-      id: 5,
-      role: "Product Manager",
-      company: "TCS",
-      packageRange: "$90,000 - $120,000",
-      rating: 4.8,
-      location: "Seattle, WA",
-      posted: "5 days ago",
-      type: ["Full Time", "Remote", "Director"],
-    },
-  ];
-
-  const popularJobs = [
-    {
-      id: 1,
-      role: "Frontend Developer",
-      company: "GoDigi infotech",
-      packageRange: "$60,000",
-      location: "Pune, India",
-    },
-    {
-      id: 2,
-      role: "Backend Developer",
-      company: "GoDigi infotech",
-      packageRange: "$60,000",
-      location: "Pune, India",
-    },
-    {
-      id: 3,
-      role: "Reactjs Developer",
-      company: "GoDigi infotech",
-      packageRange: "$60,000",
-      location: "Pune, India",
-    },
-  ];
-
-  const internships = [
-    {
-      id: "1",
-      title: "Frontend Developer Intern",
-      company: "Godigi Infotech",
-      type: "Paid",
-      image:
-        "https://images.pexels.com/photos/1181675/pexels-photo-1181675.jpeg",
-      duration: "3 Months",
-      stipend: 15000,
-    },
-    {
-      id: "2",
-      title: "Backend Developer Intern",
-      company: "Godigi Infotech",
-      type: "Unpaid",
-      image:
-        "https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg",
-      duration: "6 Months",
-    },
-    {
-      id: "3",
-      title: "UI/UX Designer Intern",
-      company: "Godigi Infotech",
-      type: "Paid",
-      image:
-        "https://images.pexels.com/photos/3184328/pexels-photo-3184328.jpeg",
-      duration: "2 Months",
-      stipend: 12000,
-    },
-    {
-      id: "4",
-      title: "Marketing Intern",
-      type: "Unpaid",
-      duration: "1 Month",
-      image:
-        "https://images.pexels.com/photos/3184466/pexels-photo-3184466.jpeg",
-      company: "Godigi Infotech",
-    },
-    {
-      id: "5",
-      title: "Data Analyst Intern",
-      type: "Paid",
-      image:
-        "https://images.pexels.com/photos/1181675/pexels-photo-1181675.jpeg",
-      duration: "4 Months",
-      company: "Godigi Infotech",
-      stipend: 18000,
-    },
-  ];
 
 
 
-const exams = [
-  { id: "1", title: "HTML Basics", type: "Free", topic: "html" },
-  {
-    id: "2",
-    title: "CSS Fundamentals",
-    type: "Paid",
-    price: 499,
-    topic: "css",
-  },
-  { id: "3", title: "JavaScript Essentials", type: "Free", topic: "js" },
-  { id: "4", title: "Advanced CSS", type: "Paid", price: 799, topic: "css" },
-  { id: "5", title: "JavaScript ES6+", type: "Paid", price: 999, topic: "js" },
-  { id: "6", title: "Responsive Design", type: "Free", topic: "css" },
-  { id: "7", title: "Flexbox Mastery", type: "Paid", price: 599, topic: "css" },
-];
 
-const topicIcons = {
-  html: { component: FontAwesome5, name: "html5", color: "#e34f26" },
-  css: { component: FontAwesome5, name: "css3-alt", color: "#2965f1" },
-  js: { component: FontAwesome5, name: "js-square", color: "#f0db4f" },
-};
 
 
 
   const goToJobDetails = (id) => {
-    console.log("hello");
     router.push({
       pathname: "/applyJobs",
-      params: { id: id },
+      params: { id: id, prf: "Job" },
     });
   };
+  const goToInterDash = (id) => {
+    router.push("/dashIntern")
+  };
   const goToCourseDetailsPage = (id) => {
-    console.log("hello");
     router.push({
       pathname: "/buyCourse",
       params: { id: id },
     });
   };
- const goToIntenshipDetails = (id) => {
-   router.push({
-     pathname: "/internshipDetails",
-     params: { id: id }, // pass the param here
-   });
- };
- const goToInterviewQuestionDetails = (id) => {
-   router.push({
-     pathname: "/interviewQuestionsDetails",
-     params: { id: id }, // pass the param here
-   });
- };
+  const goToIntenshipDetails = (id) => {
+    router.push({
+      pathname: "/applyJobs",
+      params: { id: id, prf: "Internship" }, // pass the param here
+    });
+  };
+  const goToInterviewQuestionDetails = (id) => {
+    router.push({
+      pathname: "/interviewQuestionsDetails",
+      params: { id: id }, // pass the param here
+    });
+  };
 
   const navigation = useNavigation();
- const goToNotesDetails=(id)=>{
-   navigation.navigate("PDFViewerScreen", {
-     subjectId: id,
-   });
- }
+  const goToNotesDetails = (id) => {
+    navigation.navigate("PDFViewerScreen", {
+      subjectId: id,
+    });
+  }
 
   const [selectedJob, setSelectedJob] = useState("Jobs");
+  const {setIsUserOfflineStudent} = useContext(UserContext);
   const [currentPage, setCurrentPage] = useState(0); // Track the current page of the carousel
 
-  // Render function for FlatList
-  const renderJobItem = ({ item }) => (
-    <TouchableOpacity
-      style={[
-        styles.jobCategoryItem,
-        selectedJob === item.name && styles.selectedJobCategory,
-      ]}
-      onPress={() => setSelectedJob(item.name)}
-    >
-      <Text
-        style={[
-          styles.jobCategoryText,
-          selectedJob === item.name && styles.selectedJobText,
-        ]}
-      >
-        {item.name}
-      </Text>
-    </TouchableOpacity>
-  );
+
 
   const renderRecJobItem = ({ item }) => (
     <TouchableOpacity
-      onPress={() => goToJobDetails(item.id)}
       style={styles.recJob}
+      onPress={() => goToJobDetails(item.id)}
     >
       <View style={styles.topPartRec}>
-        <View style={styles.recTop}>
-          <Text style={styles.recDate}>20 May 2025</Text>
-          {/* <Text style={styles.recDateSave}>
-            <FontAwesome5 name="bookmark" size={14} color="#000" />
-          </Text> */}
+        <View style={{ width: "70%" }}>
+          <Text style={styles.roleText} numberOfLines={1} ellipsizeMode="tail">
+            {item.title}
+          </Text>
+          <Text style={styles.compText}>{item.company_name}</Text>
         </View>
-        <View style={styles.compName}>
-          <View>
-            <Text style={styles.compText}>{item.company_name}</Text>
-            <Text style={styles.roleText}>{item.title}</Text>
-          </View>
-          <View>
-            {/* <Image
-              source={ImagesPath.beats}
-              style={{ width: 40, height: 40, objectFit: "contain" }}
-            /> */}
-          </View>
-        </View>
-        {/* <View style={styles.typeView}>
-          {item.type.map((i, index) => {
-            // Return the Text component for each job type
-            return (
-              <Text style={styles.type} key={index}>
-                {i}
-              </Text>
-            );
-          })}
-        </View> */}
+        {
+          item.img_url == null
+            ?
+            <View style={styles.nameBg}>
+              <Text style={{ color: Colors.bg, fontWeight: 600, fontSize: 25 }}>{item?.company_name.charAt(0)}</Text>
+            </View>
+            :
+            <View style={styles.imageBg}>
+              <Image
+                source={{ uri: `https://godigiinfotech.com/${item.img_url}` }}
+                style={{ width: 50, height: 50, }}
+                transition={1000}
+                contentFit="scale-down"
+              />
+            </View>
+        }
       </View>
-
+      <View style={styles.package}>
+        <Text style={styles.subText}>{item.salary}</Text>
+      </View>
+      <View style={styles.typeView}>
+        {/* {type.map((i, index) => {
+           // Return the Text component for each job type
+           return (
+             <Text style={styles.type} key={index}>
+               {i}
+             </Text>
+           );
+         })} */}
+        <Text style={styles.type}>
+          {item.job_work_type_title || "NA"}
+        </Text>
+        <Text style={styles.type}>
+          {item.job_working_type_title || "NA"}
+        </Text>
+      </View>
+      <View style={styles.dottedLine}></View>
       <View style={styles.bottompart}>
         <View style={styles.btRightPart}>
-          <Text style={styles.subText}>{item.salary}</Text>
-          <Text style={styles.subTextLoc}>Pune</Text>
+          <Entypo name="location-pin" size={24} color="#929090ff" />
+          <Text style={[styles.btsubText, { width: "60%" }]} numberOfLines={1} ellipsizeMode="tail">{item.city_names}</Text>
         </View>
         <View style={styles.btLeftPart}>
-          <View style={styles.btnDetails}>
-            <Text style={{ color: "white", fontSize: 12 }}>Details</Text>
-          </View>
+          {/* <Text style={styles.btsubText}>{item.posted}</Text> */}
+          <Text style={styles.momentText}>{item.no_of_openings} vacancies</Text>
+          {/* <FontAwesome name="bookmark" size={24} color="#0069CB" /> */}
         </View>
       </View>
     </TouchableOpacity>
-    // <Text>hello</Text>
   );
 
   const coursesListItem = ({ item }) => {
-   let newUrl = `https://godigiinfotech.com/${item.url}`;
-    return(
-      <TouchableOpacity style={styles.basedJob} onPress={()=>goToCourseDetailsPage(item.id)}>
-      <Image
-        source={{uri:newUrl}}
-        style={{ width: "100%", height: 150, borderRadius: 10 }}
-      />
-      <View style={styles.typeViewCourses}>
-        <Text style={styles.typeCourses}>{item.type || "Coding"}</Text>
-        {/* <View style={{ flexDirection: "row", gap: 5 }}>
-          <AntDesign name="star" size={18} color="#F9A64B" />
-          <Text style={styles.ratingText}>{item.rating}</Text>
-        </View> */}
-      </View>
-      <Text style={styles.coursesName}>{item.title}</Text>
-      <View style={styles.hr}></View>
-      <View style={styles.bottompartCourses}>
-        <View style={styles.btRightPartCourses}>
-          <Text style={styles.btmrpText}>MRP</Text>
-          <Text style={[styles.btmrpTextPrice]}>{item.mrp || "NA"}</Text>
-          <View style={styles.lineThrough}></View>
+    let newUrl = `https://godigiinfotech.com/${item.url}`;
+    return (
+      <TouchableOpacity
+        style={styles.basedJob}
+        onPress={() => goToCourseDetailsPage(item.id)}
+      >
+        {/* <BlurView
+          intensity={100}
+          tint="dark"
+          style={{ height: 150, borderRadius: 100 }}
+        >
+        </BlurView> */}
+        {/* <Image
+            source={{ uri: newUrl }}
+            style={{
+              width: "100%",
+              height: 150,
+              borderTopRightRadius: 10,
+              borderTopLeftRadius: 10,
+            }}
+          /> */}
+        {item.url !== null ?
+          <Image
+            source={{ uri: newUrl }}
+            //  source={ImagesPath.banner}
+            style={{
+              width: "100%",
+              height: 150,
+              borderTopRightRadius: 10,
+              borderTopLeftRadius: 10,
+            }}
+            contentFit="fill"
+            transition={1000}
+          />
+          :
+          <Image
+            source={ImagesPath.cDummy}
+            //  source={ImagesPath.banner}
+            style={{
+              width: "100%",
+              height: 150,
+              borderTopRightRadius: 10,
+              borderTopLeftRadius: 10,
+            }}
+            contentFit="fill"
+            transition={1000}
+          />
+        }
+        <View style={styles.timeCont}>
+          <FontAwesome name="clock-o" size={16} color={Colors.bg} />
+          <Text style={styles.levelText}>{item.video_duration || "NA"}</Text>
         </View>
-        <View style={styles.btLeftPart}>
-          <FontAwesome name="rupee" size={20} color={Colors.bg} />
-          <Text style={styles.btsubTextPrice}>{item.price}</Text>
+        <View style={{ padding: 10 }}>
+          <View
+            style={{
+              flexDirection: "row",
+              gap: 5,
+              justifyContent: "space-between",
+            }}
+          >
+            <View style={{ flexDirection: "row", gap: 1 }}>
+              <Feather name="bar-chart" size={16} color={Colors.bg} />
+              <Text style={styles.levelText}>{item.level || "Basic"} Level</Text>
+            </View>
+            <Text style={styles.levelText}>({item.chapter_count} lessons)</Text>
+          </View>
+          <Text
+            style={styles.coursesName}
+          // numberOfLines={1}
+          // ellipsizeMode="tail"
+          >
+            {item.title}
+          </Text>
+          <View style={{ flexDirection: "row", marginTop: 5, gap: 20 }}>
+            <View
+              style={{
+                justifyContent: "center",
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 3,
+              }}
+            >
+              <FontAwesome name="rupee" size={18} color={"#000"} />
+              <Text style={styles.coursePrice}>{Number(item.price?.split(".")[0]).toLocaleString()}</Text>
+            </View>
+            <View
+              style={{
+                justifyContent: "center",
+                flexDirection: "row",
+                alignItems: "center",
+              }}
+            >
+              <FontAwesome name="rupee" size={16} color={"gray"} />
+              <Text style={styles.mrpName}>
+                {item.mrp
+                  ? Number(item.mrp.toString().split(".")[0]).toLocaleString()
+                  : "NA"}
+              </Text>
+
+
+              <View style={styles.lineThrough}></View>
+            </View>
+          </View>
         </View>
-      </View>
-    </TouchableOpacity>
-    )
+      </TouchableOpacity>
+    );
   }
+
+  const renderInternshipCard = ({ item }) => {
+    let newUrl = `https://godigiinfotech.com/${item.img_url}`;
+    return (
+      <TouchableOpacity
+        style={styles.basedJob}
+        onPress={() => goToIntenshipDetails(item.id)}
+      >
+        {item.img_url !== null ?
+          <Image
+            source={{ uri: newUrl }}
+            //  source={ImagesPath.banner}
+            style={{
+              width: "100%",
+              height: 150,
+              borderTopRightRadius: 10,
+              borderTopLeftRadius: 10,
+            }}
+            contentFit="fill"
+            transition={1000}
+          />
+          :
+          <Image
+            source={ImagesPath.iDummy}
+            //  source={ImagesPath.banner}
+            style={{
+              width: "100%",
+              height: 150,
+              borderTopRightRadius: 10,
+              borderTopLeftRadius: 10,
+            }}
+            contentFit="fill"
+            transition={1000}
+          />
+        }
+        {/* <Image
+         //  source={{ uri: newUrl }}
+          source={ImagesPath.banner}
+          style={{
+            width: "100%",
+            height: 150,
+            borderTopRightRadius: 10,
+            borderTopLeftRadius: 10,
+          }}
+        /> */}
+        {/* <View style={styles.timeCont}>
+         <FontAwesome name="clock-o" size={16} color={Colors.bg} />
+         <Text style={styles.levelText}>6h 40m</Text>
+       </View> */}
+        <View style={{ padding: 10 }}>
+          <Text
+            style={styles.coursesName}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {item.title}
+          </Text>
+          <View style={{ flexDirection: "row", marginHorizontal: 10, marginTop: 5, gap: 20 }}>
+            <View
+              style={{
+                justifyContent: "center",
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 3,
+              }}
+            >
+              <Entypo name="location-pin" size={24} color="#929090ff" />
+              <Text style={[styles.btsubText, { width: "100%" }]} numberOfLines={1} ellipsizeMode="tail">{item.city_names}</Text>
+            </View>
+          </View>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   const logAllAsyncStorageItems = async () => {
     try {
@@ -380,66 +371,19 @@ const topicIcons = {
     }
   };
 
-  const renderInternshipCard = ({ item }) => {
-     let newUrl = `https://godigiinfotech.com/${item.url}`;
-    //  console.log("inetndfhdm ",newUrl)
-    return (
-      <TouchableOpacity
-        style={styles.basedJob}
-        onPress={() => goToIntenshipDetails(item.id)}
-      >
-        {item.url && (
-          <Image
-            src={{ uri: newUrl }}
-            style={{ width: "100%", height: 150, borderRadius: 10 }}
-          />
-        )}
-        <View>
-          <Text style={styles.compText}>{item.company_name}</Text>
-          <Text style={styles.roleText}>{item.title}</Text>
-        </View>
-        <View style={styles.hr}></View>
-        <View style={styles.bottompart}>
-          <View style={styles.btRightPart}>
-            <Text style={styles.subText}>{item.salary}</Text>
-            <Text style={styles.subTextLoc}>{item.city_name}</Text>
-          </View>
-          <View style={styles.btLeftPart}>
-            <View style={styles.btnDetails}>
-              <Text style={{ color: "white", fontSize: 12 }}>Details</Text>
-            </View>
-          </View>
-        </View>
-      </TouchableOpacity>
-    );
-  }
 
-  const renderPopularJobItem = ({ item }) => (
-    <View style={styles.popularJobItem}>
-      <View style={styles.popRight}>
-        <Image
-          source={ImagesPath.beats}
-          style={{ width: 40, height: 40, objectFit: "contain" }}
-        />
-        <View>
-          <Text style={styles.roleText}>{item.role}</Text>
-          <Text style={styles.compText2}>{item.company}</Text>
-        </View>
-      </View>
-      <View style={styles.popLeft}>
-        <Text style={styles.package}>{item.packageRange}</Text>
-        <Text style={styles.loc}>{item.location}</Text>
-      </View>
-    </View>
-  );
+
 
   const renderNotes = ({ item }) => {
-      let newUrl = `https://godigiinfotech.com/${item.url}`;
+    let newUrl = `https://godigiinfotech.com/${item.url}`;
     return (
-      <TouchableOpacity onPress={()=>goToNotesDetails(item.id)} style={styles.topCmp}>
+      <TouchableOpacity onPress={() => goToNotesDetails(item.id)} style={styles.topCmp}>
         {/* <Image source={item.src} /> */}
         {/* {Icon && <Icon name={iconName} size={30} color={iconColor} />} */}
-        <Image source={{ uri:newUrl }} style={{ height: 40, width: 50,objectFit:"contain" }} />
+        <Image source={{ uri: newUrl }} style={{ height: 50, width: 50 }}
+          contentFit="fill"
+          transition={1000}
+        />
         <Text style={styles.roleTextTop}>{item.subject_name}</Text>
         {/* {item.type == "Paid" ? (
           <View style={{ flexDirection: "row", alignItems: "center" }}>
@@ -453,9 +397,10 @@ const topicIcons = {
     );
   };
 
+  const type = ["Full Time", "Remote", "Director"];
 
   const renderInterviewQuestions = ({ item }) => {
-     let newUrl = `https://godigiinfotech.com/${item.url}`;
+    let newUrl = `https://godigiinfotech.com/${item.url}`;
     return (
       <TouchableOpacity
         onPress={() => goToInterviewQuestionDetails(item.id)}
@@ -464,9 +409,14 @@ const topicIcons = {
         {/* <Image source={item.src} /> */}
         <Image
           source={{ uri: newUrl }}
-          style={{ height: 40, width: 50, objectFit: "contain" }}
+          style={{ height: 50, width: 50 }}
+          contentFit="fill"
+          transition={1000}
         />
         <Text style={styles.roleTextTop}>{item.subject_name}</Text>
+        <Text style={styles.questionCount}>
+          ({item.question_count} questions )
+        </Text>
         {/* {item.type == "Paid" ? (
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <FontAwesome name="rupee" size={16} color={Colors.bg} />
@@ -484,7 +434,7 @@ const topicIcons = {
 
 
 
-  
+
 
   // Handle page change in the PagerView
   const handlePageSelected = (e) => {
@@ -500,6 +450,7 @@ const topicIcons = {
   };
   const goToJobsListing = () => {
     router.push("/(main)/(tabs)/jobs");
+    //  router.push(`/buyCourse?id=${1}`);
   };
   const goToCourseListing = () => {
     router.push("/(main)/(tabs)/courses");
@@ -514,38 +465,72 @@ const topicIcons = {
     router.push("/internships");
   };
 
+  const checkVersionOutdatedOrNot = (latestVersion) => {
 
-  const getDashboardData = async()=>{
+    const currentVersion = Constants.expoConfig?.version || "1.0.0"
+    const a1 = latestVersion.split('.').map(Number);
+    const a2 = currentVersion.split('.').map(Number);
+    console.log(a1, a2)
+
+    for (let i = 0; i < Math.max(a1.length, a2.length); i++) {
+      const n1 = a1[i] || 0;
+      const n2 = a2[i] || 0;
+      if (n1 > n2) return 1;
+      if (n1 < n2) return -1;
+      console.log(n1, n2)
+    }
+    console.log(0)
+    return 0; // equal
+  }
+
+
+  const getDashboardData = async () => {
     try {
       setLoadingDashData(true)
-       const userTok = await AsyncStorage.getItem("logged_in_user_token");
-       console.log("usetoken is",userTok)
-       const formdata = new FormData();
-       formdata.append("token",userTok);
-        const response = await apiInstance.post("dashboard", formdata, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-        if(response.data.status){
-          // console.log(response.data);
-          setInternshipsData(response.data.data.internships);
-          setNotesData(response.data.data?.notes);
-          setInterviewQuestionsData(response.data.data?.question_answers);
-          setBannersData(response.data.data?.banners);
-          setCoursesData(response.data.data?.courses);
-          // console.log("thisesa are jobs",response.data.data.jobs.length);
-          setJobsData(response.data.data.jobs);
+      const userTok = await AsyncStorage.getItem("logged_in_user_token");
+      console.log("usetoken is", userTok)
+      const formdata = new FormData();
+      formdata.append("token", userTok);
+      const response = await apiInstance.post("dashboard", formdata, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      if (response.data.status) {
+        setInternshipsData(response.data.data.internships);
+        setNotesData(response.data.data?.notes);
+        setInterviewQuestionsData(response.data.data?.question_answers);
+        setBannersData(response.data.data?.banners);
+        setCoursesData(response.data.data?.courses);
+        let bannerData = {
+          text: response?.data?.data.banner_text,
+          btnText: response?.data?.data.banner_btn_text
         }
+        setBannersText(bannerData);
+        setIsUserOfflineStudent(response.data.is_offline_batch)
+        //  const currentVersion = Constants.expoConfig?.version || "1.0.0"
+
+        let latestVersion = Platform.OS == "ios" ? response.data.app_version_ios : response.data.app_version_android
+        let verCheck = checkVersionOutdatedOrNot(latestVersion)
+        if (verCheck == 1) {
+          router.replace("/updateScreen")
+        }
+        // console.log("latestVersion",latestVersion,currentVersion)
+        // if(latestVersion !== currentVersion ){
+        // }
+
+        // console.log("thisesa are jobs",response.data.data.jobs.length);
+        setJobsData(response.data.data.jobs);
+      }
     } catch (error) {
       console.log(error)
     }
-    finally{
+    finally {
       setLoadingDashData(false)
     }
   }
 
-  useEffect(()=>{
+  useEffect(() => {
     getDashboardData();
-  },[]);
+  }, []);
 
   const [refreshing, setRefreshing] = useState(false);
 
@@ -555,70 +540,39 @@ const topicIcons = {
     setRefreshing(false);
   };
 
+  const isFocused = useIsFocused(); // ✅ to track current focus
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("tabPress", (e) => {
+      if (isFocused) {
+        getDashboardData();
+      }
+    });
+
+    return unsubscribe;
+  }, [navigation, isFocused]);
+
   return (
     <View style={styles.bg}>
       <ScrollView
         style={styles.mainBg}
+        contentContainerStyle={{ paddingBottom: 110 }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {/* <View style={styles.topPart}>
-          <View style={styles.topPartTwo}>
-            <TouchableOpacity style={styles.searchBg} onPress={goToSearch}>
-              <TextInput
-                placeholder="Search a Course, Job or Internships"
-                placeholderTextColor={"grey"}
-                autoComplete="off"
-                editable={false}
-                style={[
-                  Colors.inputbox,
-                  {
-                    backgroundColor: "#fff",
-                    borderWidth: 1,
-                    borderColor: "#EDF1F3",
-                  },
-                ]}
-              />
-            </TouchableOpacity>
-          </View>
-        </View> */}
+
 
         {loadingDashData ? (
           <ActivityIndicator style={{ marginTop: 50 }} />
         ) : (
           <>
-            <Animated.View
-              entering={FadeInUp.duration(1000).delay(100)}
-              style={styles.pagerView}
-            >
-              {bannersData && bannersData.length > 0 && (
-                <PagerView
-                  initialPage={0}
-                  onPageSelected={handlePageSelected}
-                  style={styles.carousel}
-                >
-                  {bannersData.map((banner, index) => (
-                    <View style={styles.page} key={index}>
-                      <FirstPager urlbanner={banner?.url} />
-                    </View>
-                  ))}
-                </PagerView>
-              )}
+            {
+              bannersData && bannersData.length > 0
+              &&
+              <AutoSwiperBanner data={bannersData} />
+            }
 
-              {/* Bottom Dots */}
-              <View style={styles.dotsContainer}>
-                {Array.from({ length: bannersData.length }).map((_, index) => (
-                  <View
-                    key={index}
-                    style={[
-                      styles.dot,
-                      index === currentPage && styles.activeDot,
-                    ]}
-                  />
-                ))}
-              </View>
-            </Animated.View>
 
             <Animated.View
               entering={FadeInRight.duration(500).delay(100)}
@@ -632,12 +586,14 @@ const topicIcons = {
                   See all
                 </Text>
               </View>
+              <Text style={styles.tipsTextSec}>Job openings available for you - Apply easily</Text>
               <FlatList
                 horizontal
                 data={jobsData}
                 renderItem={renderRecJobItem}
                 keyExtractor={(item) => item.id.toString()}
                 showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ paddingVertical: 5 }}
                 style={styles.jobCont}
                 ListEmptyComponent={() => {
                   return (
@@ -675,11 +631,13 @@ const topicIcons = {
                   See all
                 </Text>
               </View>
+              <Text style={styles.tipsTextSec}>Learn from courses - designed industry-leading experts</Text>
               <FlatList
                 horizontal
                 data={coursesData}
                 renderItem={coursesListItem}
                 keyExtractor={(item) => item.id.toString()}
+                contentContainerStyle={{ paddingVertical: 5 }}
                 showsHorizontalScrollIndicator={false}
                 style={styles.jobCont}
                 ListEmptyComponent={() => {
@@ -706,22 +664,64 @@ const topicIcons = {
               />
             </Animated.View>
 
-            {/* <View>
-          <LinearGradient
-            colors={["#C1D9FF", "#ffffff"]}
-            style={styles.gradcontainer}
-            start={{ x: 0, y: 1 }} // Start from bottom
-            end={{ x: 0, y: 0 }}
-          >
-            <Text style={styles.textPrep}>
-              Boot Skills Upgrade plan with Godigi
-            </Text>
-            <TouchableOpacity style={styles.prepBtn}>
-              <Text style={styles.btnText}>Start Preparing</Text>
+
+
+            <TouchableOpacity
+              // entering={FadeInUp.duration(1000).delay(100)}
+              style={styles.cardView}
+              onPress={goToInterDash}
+            >
+              <View style={{ width: "55%" }}>
+                <Text style={styles.hireText}>
+                </Text>
+                <WebView
+                  originWhitelist={["*"]}
+                  source={{
+                    html: `
+      <html>
+        <head>
+          <style>
+            body {
+              font-size: 50px !important ;     /* Increase text size */
+              // line-height: 1.5;
+              color: #333;
+              margin: 0;
+              overflow:hidden;
+              // padding: 10px;
+              // text-align: center;  /* Optional: center text */
+            }
+          </style>
+        </head>
+        <body>
+          ${bannersText?.text || ""}
+        </body>
+      </html>
+    `,
+                  }}
+                  startInLoadingState
+                  style={{ backgroundColor: "transparent" }} // Removes white background if needed
+                />
+              </View>
+              <View style={{ width: "45%", justifyContent: "center", alignItems: "center" }}>
+                <Image
+                  source={ImagesPath.dashBlock}
+                  style={{ width: 40, height: 80, }}
+                  contentFit="fill"
+                  transition={1000}
+                />
+                <LinearGradient
+                  colors={["#F16063", "#FFC656"]}
+                  locations={[0, 1]}
+                  start={{ x: 0, y: 1 }} // Start from top-left corner
+                  end={{ x: 1, y: 0 }}
+                  // style={styles.themeBtn}
+                  style={{ position: "absolute", padding: 5, borderRadius: 5, width: 130 }}
+                >
+
+                  <TouchableOpacity onPress={goToInterDash} ><Text style={{ color: "#fff", fontWeight: 500, fontSize: 12, textAlign: 'center' }}>{bannersText?.btnText}</Text></TouchableOpacity>
+                </LinearGradient>
+              </View>
             </TouchableOpacity>
-            <Image source={ImagesPath.people} />
-          </LinearGradient>
-        </View> */}
 
             <View style={styles.pagerView}>
               <View style={styles.pagerTop}>
@@ -730,12 +730,14 @@ const topicIcons = {
                   See all
                 </Text>
               </View>
+              <Text style={styles.tipsTextSec}>Internship opportunities open - Apply today</Text>
               <FlatList
                 data={internshipsData}
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 keyExtractor={(item) => item.id}
                 renderItem={renderInternshipCard}
+                contentContainerStyle={{ paddingVertical: 5 }}
                 style={styles.jobCont}
                 ListEmptyComponent={() => {
                   return (
@@ -768,12 +770,14 @@ const topicIcons = {
                   See all
                 </Text>
               </View>
+              <Text style={styles.tipsTextSec}>Learn from notes - written by industry experts</Text>
               <FlatList
                 data={notesData}
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 renderItem={renderNotes}
                 keyExtractor={(item) => item.id.toString()}
+                contentContainerStyle={{ paddingVertical: 5 }}
                 style={styles.jobCont}
                 ListEmptyComponent={() => {
                   return (
@@ -806,12 +810,14 @@ const topicIcons = {
                   See all
                 </Text>
               </View>
+              <Text style={styles.tipsTextSec}>Top interview questions with expert guidance</Text>
               <FlatList
                 data={interviewQuestionsData}
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 renderItem={renderInterviewQuestions}
                 keyExtractor={(item) => item.id.toString()}
+                contentContainerStyle={{ paddingVertical: 5 }}
                 style={styles.jobCont}
                 ListEmptyComponent={() => {
                   return (
@@ -843,30 +849,6 @@ const topicIcons = {
   );
 }
 
-const FirstPager = ({urlbanner}) => {
-   let newUrl = `https://godigiinfotech.com/${urlbanner}`;
-   console.log(newUrl)
-  return (
-    <View
-      style={styles.gradientContainer}
-    >
-      {/* <View style={styles.pageComp}>
-        <View style={styles.rightSide}>
-          <Text style={styles.pagertext}>
-            How to find a perfect job for you?
-          </Text>
-          <TouchableOpacity style={styles.pageBtn}>
-            <Text style={{ color: "white", fontWeight: "600" }}>Read more</Text>
-          </TouchableOpacity>
-        </View>
-      </View> */}
-      <Image
-        source={{uri:newUrl}}
-        style={{ width: "100%", height: "100%", borderRadius: 20 }}
-      />
-    </View>
-  );
-};
 
 const styles = StyleSheet.create({
   btmpart: {
@@ -996,21 +978,20 @@ const styles = StyleSheet.create({
   },
   topCmp: {
     backgroundColor: "#fff",
-    width: 150,
-    paddingVertical: 20,
+    width: 120,
+    height: 120,
+    // paddingVertical: 10,
     paddingHorizontal: 10,
-    marginHorizontal: 10,
+    marginHorizontal: 5,
     borderRadius: 10,
     justifyContent: "center",
     alignItems: "center",
     gap: 5,
-    shadowColor: "lightgrey",
-    shadowOffset: { width: 0, height: 5 },
-    shadowRadius: 5,
-    shadowOpacity: 0.8,
-    elevation: 5,
-    borderWidth: 0.5,
-    borderColor: "lightgrey",
+    shadowColor: "black",
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: 2,
+    shadowOpacity: 0.12,
+    elevation: 2,
   },
   internshipCard: {
     backgroundColor: "#fff",
@@ -1022,18 +1003,18 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     gap: 5,
-    shadowColor: "lightgrey",
-    shadowOffset: { width: 0, height: 5 },
+    shadowColor: "lightgray",
+    shadowOffset: { width: 0, height: 0 },
     shadowRadius: 5,
     shadowOpacity: 0.8,
-    elevation: 5,
+    elevation: 2,
     borderWidth: 0.5,
-    borderColor: "lightgrey",
+    borderColor: "#e2e2e2",
   },
   internType: {
     fontSize: 10,
-    borderRadius:5,
-    marginTop:5,
+    borderRadius: 5,
+    marginTop: 5,
     fontWeight: 500,
     padding: 2,
     paddingHorizontal: 8,
@@ -1044,32 +1025,28 @@ const styles = StyleSheet.create({
   },
   recJob: {
     backgroundColor: "#fff",
-    width: 250,
+    width: 300,
     borderRadius: 10,
-    padding: 5,
-    marginHorizontal: 10,
-    shadowColor: "lightgrey",
-    shadowOffset: { width: 0, height: 5 },
-    shadowRadius: 5,
-    shadowOpacity: 0.8,
-    elevation: 5,
-    borderWidth: 0.5,
-    borderColor: "lightgrey",
+    padding: 10,
+    marginHorizontal: 5,
+    shadowColor: "black",
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: 2,
+    shadowOpacity: 0.12,
+    elevation: 2,
   },
   basedJob: {
     backgroundColor: "#fff",
-    width: 250,
+    width: 200,
     height: "auto",
     borderRadius: 10,
-    padding: 10,
-    marginHorizontal: 10,
-    shadowColor: "lightgrey",
-    shadowOffset: { width: 0, height: 5 },
-    shadowRadius: 5,
-    shadowOpacity: 0.8,
-    elevation: 5,
-    borderWidth: 0.5,
-    borderColor: "lightgrey",
+    // padding: 10,
+    marginHorizontal: 5,
+    shadowColor: "black",
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: 2,
+    shadowOpacity: 0.12,
+    elevation: 2,
   },
   typeViewCourses: {
     flexDirection: "row",
@@ -1097,11 +1074,60 @@ const styles = StyleSheet.create({
     color: "black",
   },
   coursesName: {
-    fontSize: 13,
+    fontSize: 15,
+    height: 40,
     fontWeight: 800,
-    marginHorizontal: 5,
     marginVertical: 3,
-    color: "black",
+    color: "#2C2C2C",
+  },
+  coursePrice: {
+    fontSize: 15,
+    fontWeight: 800,
+    marginVertical: 3,
+    color: "#2C2C2C",
+  },
+  levelText: {
+    fontSize: 11,
+    fontWeight: 600,
+    marginVertical: 3,
+    // color: Colors.bg,
+    color: "gray",
+  },
+  timeCont: {
+    backgroundColor: "#fff",
+    position: "absolute",
+    top: 120,
+    left: 10,
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 5,
+  },
+  imgOverlay: {
+    backgroundColor: "rgba(0, 0, 0, 0.1)",
+    width: "100%",
+    height: 150,
+    //  position:"absolute",
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
+  },
+  mrpName: {
+    fontSize: 12,
+    fontWeight: 600,
+    marginVertical: 3,
+    color: "gray",
+  },
+  lineThrough: {
+    width: 50,
+    height: 1,
+    // backgroundColor: "#b5b0b0fc",
+    backgroundColor: "#AEAEAE",
+    position: "absolute",
+    // transform: [{ rotate: "-20deg" }],
+    left: -4,
+    bottom: 13,
   },
   hr: {
     borderColor: "lightgray",
@@ -1121,7 +1147,7 @@ const styles = StyleSheet.create({
     elevation: 5,
     borderRadius: 8,
     borderWidth: 0.5,
-    borderColor: "lightgrey",
+    borderColor: "#e2e2e2",
 
     shadowColor: "lightgrey",
     shadowOffset: { width: 0, height: 5 },
@@ -1141,17 +1167,17 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
     justifyContent: "center",
   },
-  btRightPart: {
-    flexDirection: "column",
-    alignItems: "flex-start",
-    justifyContent: "flex-start",
-  },
-  btLeftPart: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 3,
-  },
+  // btRightPart: {
+  //   flexDirection: "column",
+  //   alignItems: "flex-start",
+  //   justifyContent: "flex-start",
+  // },
+  // btLeftPart: {
+  //   flexDirection: "row",
+  //   alignItems: "center",
+  //   justifyContent: "center",
+  //   gap: 3,
+  // },
   btsubTextPrice: {
     fontSize: 14,
     // color: "#665E98",
@@ -1168,21 +1194,23 @@ const styles = StyleSheet.create({
     color: "#8d8888ff",
     fontWeight: 600,
   },
-  lineThrough: {
-    width: 40,
-    height: 2,
-    backgroundColor: "#8d8888ff",
-    position: "absolute",
-    transform: [{ rotate: "-20deg" }],
-    left: 30,
-    bottom: 8,
+  btRightPart: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  btLeftPart: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  momentText: {
+    color: "#929090ff",
+    fontSize: 12,
+    fontWeight: 600,
   },
   bottompart: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    marginVertical: 5,
-    paddingHorizontal: 10,
   },
   bottompartCourses: {
     flexDirection: "row",
@@ -1215,11 +1243,13 @@ const styles = StyleSheet.create({
     // backgroundColor: "#F2F4FA",
     padding: 2,
     paddingHorizontal: 8,
-    borderRadius: 15,
+    borderRadius: 5,
     fontSize: 10,
     fontWeight: "600",
-    borderWidth: 1,
-    borderColor: "black",
+    color: "gray",
+    // elevation: 2,
+    // shadowColor:'lightgray'
+    backgroundColor: "#F2F4FA",
   },
   packageTop: {
     color: "black",
@@ -1231,9 +1261,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   subText: {
-    color: "black",
+    color: "gray",
     fontWeight: "bold",
-    fontSize: 12,
+    fontSize: 13,
     // paddingRight: 20,
     alignItems: "center",
     justifyContent: "center",
@@ -1246,7 +1276,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   btsubText: {
-    color: "black",
+    color: "#929090ff",
     fontWeight: 600,
     fontSize: 14,
   },
@@ -1261,14 +1291,34 @@ const styles = StyleSheet.create({
   },
   imageBg: {
     borderRadius: 3,
-    borderColor: "lightgrey",
+    borderColor: "#e2e2e2",
     borderWidth: 1,
+    width: "20%",
+    height: 50,
+    justifyContent: "center",
+    alignItems: "center",
   },
-  topPartRec: {
-    backgroundColor: "#0344943b",
+  nameBg: {
     borderRadius: 10,
-    padding: 10,
-    height:120
+    borderColor: Colors.bg,
+    borderWidth: 1,
+    width: "20%",
+    height: 50,
+    paddingVertical: 5,
+    justifyContent: "center",
+    alignItems: "center",
+    // backgroundColor:Colors.bg
+  },
+  // topPartRec: {
+  //   backgroundColor: "#0344943b",
+  //   borderRadius: 10,
+  //   padding: 10,
+  //   height: 120,
+  // },
+  topPartRec: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
   },
   recTop: {
     flexDirection: "row",
@@ -1297,13 +1347,20 @@ const styles = StyleSheet.create({
   },
   roleText: {
     fontWeight: "800",
-    fontSize: 14,
+    fontSize: 15,
+    color: 'black'
   },
   roleTextTop: {
     fontWeight: "600",
     fontSize: 14,
-    color:"black",
-    textAlign:"center"
+    color: "black",
+    textAlign: "center",
+  },
+  questionCount: {
+    fontWeight: "600",
+    fontSize: 12,
+    color: "gray",
+    textAlign: "center",
   },
   compTextTop: {
     fontWeight: "400",
@@ -1321,9 +1378,10 @@ const styles = StyleSheet.create({
     color: Colors.bg,
   },
   compText: {
-    fontWeight: "500",
-    fontSize: 12,
-    color: "#000",
+    fontWeight: "600",
+    fontSize: 13,
+    marginTop: 5,
+    color: Colors.bg,
   },
   compText2: {
     fontWeight: "400",
@@ -1334,18 +1392,28 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fafafd",
   },
+  filterBg: {
+    backgroundColor: Colors.bg,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 15,
+    paddingHorizontal: 10,
+  },
+  inputBg: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 10,
+    width: '80%',
+    flexDirection: "row"
+  },
   topPart: {
     backgroundColor: "#fff",
-    height: Platform.OS == "android" ? 80 : 220,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
     padding: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.5,
-    shadowRadius: 5,
-    elevation: 5,
-    paddingTop: Platform.OS == "android" ? 20 : 50,
+    flexDirection: 'row',
+    justifyContent: "center",
+    gap: 10
   },
   topPartOne: {
     flexDirection: "row",
@@ -1437,15 +1505,41 @@ const styles = StyleSheet.create({
   },
   mainBg: {
     marginTop: 0,
+    backgroundColor: "#F2F2F2",
+    // paddingBottom:100
   },
   pagerView: {
-    marginTop: 10,
+    marginTop: 1,
     padding: 10,
-    backgroundColor: "#fafafd",
+    backgroundColor: "#f2f2f2",
+  },
+  cardView: {
+    // marginTop: 1,
+    padding: 20,
+    backgroundColor: "white",
+    marginHorizontal: 20,
+    marginVertical: 10,
+    borderRadius: 10,
+    shadowColor: "black",
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: 2,
+    shadowOpacity: 0.12,
+    elevation: 2,
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: 'center',
+    gap: 10,
+    height: 120
+  },
+  hireText: {
+    color: "black",
+    fontWeight: 600,
+    fontSize: 13
   },
   pagerTop: {
     flexDirection: "row",
     justifyContent: "space-between",
+    paddingHorizontal: 10,
   },
   seeAll: {
     color: "#0069CB",
@@ -1455,6 +1549,15 @@ const styles = StyleSheet.create({
   tipsText: {
     fontWeight: 600,
     fontSize: 16,
+    color: 'black'
+  },
+  tipsTextSec: {
+    fontWeight: 600,
+    fontSize: 12,
+    color: 'gray',
+    marginTop: -1,
+    marginBottom: -2,
+    paddingHorizontal: 10
   },
   page: {
     height: 180,
