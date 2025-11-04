@@ -617,7 +617,7 @@ function Home() {
               style={styles.pagerView}
             >
               <View style={styles.pagerTop}>
-                <Text style={styles.tipsText} onPress={sendNotification}>
+                <Text style={styles.tipsText}>
                   Jobs for You
                 </Text>
                 <Text style={styles.seeAll} onPress={goToJobsListing}>
