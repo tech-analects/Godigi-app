@@ -1,10 +1,42 @@
+// // // // AnalyticsTracker.js
+// // // import { useEffect } from "react";
+// // // import { usePathname } from "expo-router";
+// // // import { analytics, logEvent } from "./firebaseConfig";
+
+// // // export const AnalyticsTracker = () => {
+// // //   const pathname = usePathname();
+
+// // //   const getScreenName = (path) => {
+// // //     if (!path || path === "/") return "Home";
+// // //     const name = path.replace("/", "");
+// // //     return name.charAt(0).toUpperCase() + name.slice(1);
+// // //   };
+
+// // //   useEffect(() => {
+// // //     if (!pathname || !analytics) return;
+
+// // //     const screenName = getScreenName(pathname);
+// // //     logEvent(analytics, "screen_view", {
+// // //       screen_name: screenName,
+// // //       screen_class: screenName,
+// // //     });
+
+// // //     console.log("✅ Screen tracked:", screenName);
+// // //   }, [pathname]);
+
+// // //   return null;
+// // // };
+
+
 // // // AnalyticsTracker.js
 // // import { useEffect } from "react";
 // // import { usePathname } from "expo-router";
-// // import { analytics, logEvent } from "./firebaseConfig";
+// // import { analyticsPromise } from "./firebaseConfig";
+// // import { logEvent } from "firebase/analytics";
 
 // // export const AnalyticsTracker = () => {
 // //   const pathname = usePathname();
+// //   console.log(pathname)
 
 // //   const getScreenName = (path) => {
 // //     if (!path || path === "/") return "Home";
@@ -13,55 +45,23 @@
 // //   };
 
 // //   useEffect(() => {
-// //     if (!pathname || !analytics) return;
+// //     const trackScreen = async () => {
+// //       const analytics = await analyticsPromise;
+// //       if (!pathname || !analytics) return;
 
-// //     const screenName = getScreenName(pathname);
-// //     logEvent(analytics, "screen_view", {
-// //       screen_name: screenName,
-// //       screen_class: screenName,
-// //     });
+// //       const screenName = getScreenName(pathname);
+// //       logEvent(analytics, "screen_view", {
+// //         screen_name: screenName,
+// //       });
 
-// //     console.log("✅ Screen tracked:", screenName);
+// //       console.log("✅ Screen tracked:", screenName);
+// //     };
+
+// //     trackScreen();
 // //   }, [pathname]);
 
 // //   return null;
 // // };
-
-
-// // AnalyticsTracker.js
-// import { useEffect } from "react";
-// import { usePathname } from "expo-router";
-// import { analyticsPromise } from "./firebaseConfig";
-// import { logEvent } from "firebase/analytics";
-
-// export const AnalyticsTracker = () => {
-//   const pathname = usePathname();
-//   console.log(pathname)
-
-//   const getScreenName = (path) => {
-//     if (!path || path === "/") return "Home";
-//     const name = path.replace("/", "");
-//     return name.charAt(0).toUpperCase() + name.slice(1);
-//   };
-
-//   useEffect(() => {
-//     const trackScreen = async () => {
-//       const analytics = await analyticsPromise;
-//       if (!pathname || !analytics) return;
-
-//       const screenName = getScreenName(pathname);
-//       logEvent(analytics, "screen_view", {
-//         screen_name: screenName,
-//       });
-
-//       console.log("✅ Screen tracked:", screenName);
-//     };
-
-//     trackScreen();
-//   }, [pathname]);
-
-//   return null;
-// };
 
 
 import analytics from '@react-native-firebase/analytics';
@@ -96,6 +96,9 @@ export const logAppOpening = async () => {
     console.error("⚠️ Failed to log app open:", error);
   }
 };
+
+
+
 
 
 

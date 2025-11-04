@@ -16,6 +16,7 @@ import React, { useContext, useEffect, useRef, useState } from "react";
 import Constants from "expo-constants";
 import {
   ActivityIndicator,
+  Alert,
   Dimensions,
   FlatList,
   Platform,
@@ -39,6 +40,7 @@ import WebView from "react-native-webview";
 import { useIsFocused } from "@react-navigation/native";
 import { Image } from 'expo-image';
 import { UserContext } from "@/app/UserContext";
+import usePushToken from "@/app/token";
 
 const screenWidth = Dimensions.get("window").width
 // console.log(screenWidth)
@@ -354,6 +356,42 @@ function Home() {
     );
   };
 
+
+  let expoPushToken = usePushToken(); 
+
+  const sendNotification = async () => {
+  if (!expoPushToken) {
+    Alert.alert('No token', 'Expo push token not available');
+    return;
+  }
+
+  try {
+    const message = {
+      to: expoPushToken,
+      sound: 'sound.mp3', // 👈 use the file name you listed in app.json
+      title: 'Hello 👋',
+      body: 'This is a test notification with custom sound!',
+      data: { url: '/profile' },
+    };
+
+    const response = await fetch('https://exp.host/--/api/v2/push/send', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Accept-Encoding': 'gzip, deflate',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(message),
+    });
+
+    const resData = await response.json();
+    console.log('✅ Notification sent:', resData);
+  } catch (error) {
+    console.error('🔥 Error sending notification:', error);
+  }
+};
+
+
   const logAllAsyncStorageItems = async () => {
     try {
       const keys = await AsyncStorage.getAllKeys();
@@ -579,7 +617,7 @@ function Home() {
               style={styles.pagerView}
             >
               <View style={styles.pagerTop}>
-                <Text style={styles.tipsText} onPress={logAllAsyncStorageItems}>
+                <Text style={styles.tipsText} onPress={sendNotification}>
                   Jobs for You
                 </Text>
                 <Text style={styles.seeAll} onPress={goToJobsListing}>

@@ -16,7 +16,7 @@ import * as Notifications from "expo-notifications";
 import Constants from "expo-constants";
 import {latestVersions} from "./latestVersion";
 import UpdateRequiredScreen from "./updateScreen"
-import {logAppOpen,logAppOpening,logScreenView, screenViewFunc} from "./AnalyticsTracker";
+import {logAppOpening, screenViewFunc} from "./AnalyticsTracker";
 // import { getAnalytics, logEvent } from "firebase/analytics";
 // import { analytics, analyticsPromise } from "./firebaseConfig";
 // import { analytics, logEvent } from "../app/firebaseConfig";
@@ -33,20 +33,16 @@ Notifications.setNotificationHandler({
   }),
 });
 
+
 export default function RootLayout() {
   const [fontLoaded] = useFonts({
     Poppins: require("../assets/fonts/Poppins-Regular.ttf"),
   });
 
 
-  //    useEffect(() => {
-  //   if (analytics) {
-  //     logEvent(analytics, "app_open");
-  //     console.log("✅ Logged event: app_open");
-  //   } else {
-  //     console.log("⚠️ Analytics not available in Expo Go");
-  //   }
-  // }, []);
+     useEffect(() => {
+    logAppOpening();
+  }, []);
 
 
   return (
@@ -88,6 +84,8 @@ function AppContent() {
     );
   }
 
+
+
   return (
     <RootInner
       isLoggedIn={isLoggedIn}
@@ -105,6 +103,7 @@ export function RootInner({isLoggedIn,isChecking,isAppReady,isFirstLaunch}) {
   //     setLoaded(true);
   //   }, 3000);
   // }, []);
+
 
     const router = useRouter();
     const pathName = usePathname();
@@ -133,65 +132,7 @@ export function RootInner({isLoggedIn,isChecking,isAppReady,isFirstLaunch}) {
      }
    }, [isLoggedIn]);
 
-  //   useEffect(() => {
-  //   // When user taps on a notification
-  //   const subscription = Notifications.addNotificationResponseReceivedListener(
-  //     (response) => {
-  //       const data = response.notification.request.content;
-  //       console.log("this is notification,", data, response);
-
-  //       if (data?.url) {
-  //         // Navigate to that route
-  //         const target = `${data.url}`;
-  //         console.log(target)
-  //         router.push(target);
-  //       }
-  //     }
-  //   );
-
-  //   // Handle if app was launched from a killed state
-  //   const checkInitialNotification = async () => {
-  //     const lastNotification =
-  //       await Notifications.getLastNotificationResponseAsync();
-  //     const data = lastNotification?.notification?.request?.content?.data;
-
-  //     if (data?.url) {
-  //       router.push(`/${data.url}`);
-  //     }
-  //   };
-
-  //   checkInitialNotification();
-
-  //   return () => subscription.remove();
-  // }, []);
-
-// useEffect(() => {
-//   const logAppOpen = async () => {
-//     const analytics = await analyticsPromise;
-//     if (analytics) {
-//       logEvent(analytics, "app_open");
-//       console.log("App open event logged!");
-//     } else {
-//       console.log("Analytics not supported on this platform.");
-//     }
-//   };
-
-//   logAppOpen();
-// }, []);
-
-
-useEffect(() => {
-  logAppOpening();
-}, []);
-
-useEffect(() => {
-  // logScreenView(pathName);
-  console.log("hgdhfgdhgdg",pathName)
-  if(pathName){
-    screenViewFunc(pathName);
-  }
-}, [pathName]);
-
+ 
   useEffect(() => {
   // Handler when user taps a notification (foreground or background)
   const subscription = Notifications.addNotificationResponseReceivedListener(
@@ -220,6 +161,11 @@ useEffect(() => {
 
   return () => subscription.remove();
 }, []);
+
+useEffect(()=>{
+  console.log(pathName)
+  screenViewFunc(pathName)
+},[pathName])
 
   return (
     <>

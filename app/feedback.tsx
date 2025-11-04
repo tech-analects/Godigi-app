@@ -203,17 +203,25 @@ export default function FeedbackScreen() {
             <Entypo name="cross" size={24} color={Colors.bg} onPress={() => {setFeedbackModalOpen(false);setRating(0);setFeedback('')}} />
           </View>
 
-          <Text style={styles.heading}>We value your feedback! 💬</Text>
+          {/* <Text style={styles.heading}>We value your feedback! 💬</Text>
           <Text style={styles.subHeading}>
             Help us improve by sharing your experience.
-          </Text>
-          <View style={{flexDirection:'row',gap:5,marginVertical:5}}>
-          <Text style={{ fontWeight: 600 }}>Subject Name : </Text>
+          </Text> */}
+          <View style={{flexDirection:'row',gap:5,marginVertical:3}}>
+          <Text style={{ fontWeight: 600 }}>Course: </Text>
+          <Text style={{ fontWeight: 600,color:"gray"  }}>{selectedFeedback?.title}</Text>
+          </View>
+          <View style={{flexDirection:'row',gap:5,marginVertical:3}}>
+          <Text style={{ fontWeight: 600 }}>Subject : </Text>
           <Text style={{ fontWeight: 500,color:"gray" }}>{selectedFeedback?.subject_name}</Text>
           </View>
-          <View style={{flexDirection:'row',gap:5,marginVertical:5}}>
-          <Text style={{ fontWeight: 600 }}>Title: </Text>
-          <Text style={{ fontWeight: 600,color:"gray"  }}>{selectedFeedback?.title}</Text>
+          <View style={{flexDirection:'row',gap:5,marginVertical:3}}>
+          <Text style={{ fontWeight: 600 }}>Topic: </Text>
+          <Text style={{ fontWeight: 600,color:"gray"  }}>{selectedFeedback?.question}</Text>
+          </View>
+          <View style={{flexDirection:'row',gap:5,marginVertical:3}}>
+          <Text style={{ fontWeight: 600 }}>Trainer : </Text>
+          <Text style={{ fontWeight: 600,color:"gray"  }}>{selectedFeedback?.trainer_name}</Text>
           </View>
 
           {/* Rating Section */}
@@ -270,85 +278,6 @@ export default function FeedbackScreen() {
   );
 
 
-  const feedbackList = [
-    {
-      id: 1,
-      name: "Aarav Mehta",
-      title: 'Trainer Explained Everything Clearly',
-      email: "aarav.mehta@example.com",
-      rating: 5,
-      message: "The app UI is super clean and responsive. Loved the experience!",
-      date: "2025-10-10T10:23:00Z"
-    },
-    {
-      id: 2,
-      name: "Priya Sharma",
-      title: 'Trainer Explained the tasks',
-      email: "priya.sharma@example.com",
-      rating: 4,
-      message: "Works great but the notifications sometimes delay. Please fix that.",
-      date: "2025-10-09T14:18:00Z"
-    },
-    {
-      id: 3,
-      name: "Rahul Nair",
-      title: 'Trainer Explained Everything Clearly',
-      email: "rahul.nair@example.com",
-      rating: 3,
-      message: "Good features, but app loads slowly on older devices.",
-      date: "2025-10-08T08:42:00Z"
-    },
-    {
-      id: 4,
-      name: "Simran Kaur",
-      email: "simran.kaur@example.com",
-      title: 'Trainer Provided the notes',
-      rating: 5,
-      message: "Love the dark mode and smooth navigation!",
-      date: "2025-10-07T17:12:00Z"
-    },
-    {
-      id: 5,
-      name: "Dev Patel",
-      title: 'Trainer Explained each topic',
-      email: "dev.patel@example.com",
-      rating: 2,
-      message: "Crashes when I try to upload a photo. Please check.",
-      date: "2025-10-06T09:50:00Z"
-    }
-  ];
-
-  const subjects = [
-    {
-      id: "1",
-      name: "HTML",
-      totalFeedback: 5,
-      pendingFeedback: 0,
-      overallRating: 4.8,
-    },
-    {
-      id: "2",
-      name: "CSS",
-      totalFeedback: 5,
-      pendingFeedback: 0,
-      overallRating: 4.8,
-    },
-    {
-      id: "3",
-      name: "JavaScript",
-      totalFeedback: 8,
-      pendingFeedback: 2,
-      overallRating: 4.6,
-    },
-    {
-      id: "4",
-      name: "React",
-      totalFeedback: 10,
-      pendingFeedback: 1,
-      overallRating: 4.9,
-    },
-  ];
-
 
 
   return (
@@ -358,7 +287,7 @@ export default function FeedbackScreen() {
           color="#fff"
           onPress={goBack}
         />
-        <Text style={styles.pageName}>Feedback</Text>
+        <Text style={styles.pageName}>Batch Feedback</Text>
         <View>
           {/* <Fontisto name="bell" size={22} color="#fff" /> */}
         </View>
@@ -467,9 +396,8 @@ export default function FeedbackScreen() {
             }} onPress={() => { setFeedbackModalOpen(true); setSelectedFeedback(item); console.log(item) }}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                 <View style={{ alignItems: 'flex-start', gap: 3 }}>
-                  <Text style={{ fontWeight: "bold" }}>{item.subject_name}</Text>
                   <View style={{ backgroundColor: "#ECEAFA", borderRadius: 5, paddingHorizontal: 5, paddingVertical: 1, marginTop: 5 }}>
-                    <Text style={{ fontWeight: "500", color: "#665E98", fontSize: 12 }}>{item.trainer_name}</Text>
+                    <Text style={{ fontWeight: "500", color: "#665E98", fontSize: 12 }}>{item.title}</Text>
                   </View>
                 </View>
                 <View style={{ backgroundColor: "#e0a910ff", borderRadius: 5, paddingHorizontal: 5, paddingVertical: 1 }}>
@@ -478,7 +406,9 @@ export default function FeedbackScreen() {
                 </View>
               </View>
               {/* <Text>⭐ {item.rating} / 5</Text> */}
-              <Text style={{ marginVertical: 10, fontWeight: 600 }}>{item.title}</Text>
+                  <Text style={{ marginTop: 10, fontWeight: "bold" }}>Subject : <Text style={{ fontWeight: 400 }}>{item.subject_name}</Text></Text>
+              <Text style={{ fontWeight: 600 }}>Trainer Name : <Text style={{ fontWeight: 400 }}>{item.trainer_name}</Text></Text>
+              <Text style={{ marginBottom: 10,fontWeight: 600 }}>Title : <Text style={{ fontWeight: 400 }}>{item.question}</Text></Text>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
 
                 <Text style={{ fontSize: 12, color: "gray" }}>
@@ -752,7 +682,7 @@ const styles = StyleSheet.create({
     padding: 30,
     borderRadius: 30,
     width: "90%",
-    height: "65%",
+    height: "60%",
     justifyContent: 'center',
   },
   jobCategoryItem: {

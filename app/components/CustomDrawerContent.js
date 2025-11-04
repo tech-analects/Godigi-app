@@ -155,7 +155,7 @@ export default function CustomDrawerContent({ navigation }) {
           isUserOfflineStudent == 1 &&
           <DrawerItem
             {...itemStyles}
-            label="Feedback"
+            label="Batch Feedback"
             onPress={() => goToScreen("feedback")}
             icon={({ size }) => (
              <MaterialIcons name="feedback" size={size}  color={Colors.bg} />
