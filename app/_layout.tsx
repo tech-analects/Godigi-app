@@ -16,7 +16,8 @@ import * as Notifications from "expo-notifications";
 import Constants from "expo-constants";
 import {latestVersions} from "./latestVersion";
 import UpdateRequiredScreen from "./updateScreen"
-import {logAppOpen,logAppOpening,logScreenView, screenViewFunc} from "./AnalyticsTracker";
+// import {logAppOpen,logAppOpening,logScreenView, screenViewFunc} from "./AnalyticsTracker";
+
 // import { getAnalytics, logEvent } from "firebase/analytics";
 // import { analytics, analyticsPromise } from "./firebaseConfig";
 // import { analytics, logEvent } from "../app/firebaseConfig";
@@ -180,17 +181,17 @@ export function RootInner({isLoggedIn,isChecking,isAppReady,isFirstLaunch}) {
 // }, []);
 
 
-useEffect(() => {
-  logAppOpening();
-}, []);
+// useEffect(() => {
+//   logAppOpening();
+// }, []);
 
-useEffect(() => {
-  // logScreenView(pathName);
-  console.log("hgdhfgdhgdg",pathName)
-  if(pathName){
-    screenViewFunc(pathName);
-  }
-}, [pathName]);
+// useEffect(() => {
+//   // logScreenView(pathName);
+//   console.log("hgdhfgdhgdg",pathName)
+//   if(pathName){
+//     screenViewFunc(pathName);
+//   }
+// }, [pathName]);
 
   useEffect(() => {
   // Handler when user taps a notification (foreground or background)
